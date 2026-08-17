@@ -155,6 +155,161 @@ export type Database = {
           },
         ]
       }
+      goal: {
+        Row: {
+          allowed_supports: string | null
+          approved_at: string | null
+          approved_by_team_member_id: string | null
+          baseline_summary: string
+          case_id: string
+          conditions: string | null
+          created_at: string
+          criterion: string
+          domain_id: string | null
+          functional_context: string | null
+          goal_id: string
+          goal_type: Database["public"]["Enums"]["goal_type"]
+          goal_version_id: string | null
+          human_approval_status: Database["public"]["Enums"]["goal_human_approval_status"]
+          learner_id: string
+          observable_behavior: string
+          owner_team_member_id: string
+          review_date: string | null
+          start_date: string | null
+          status: Database["public"]["Enums"]["goal_status"]
+          target_date: string | null
+          timeframe: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          allowed_supports?: string | null
+          approved_at?: string | null
+          approved_by_team_member_id?: string | null
+          baseline_summary: string
+          case_id: string
+          conditions?: string | null
+          created_at?: string
+          criterion: string
+          domain_id?: string | null
+          functional_context?: string | null
+          goal_id?: string
+          goal_type: Database["public"]["Enums"]["goal_type"]
+          goal_version_id?: string | null
+          human_approval_status?: Database["public"]["Enums"]["goal_human_approval_status"]
+          learner_id: string
+          observable_behavior: string
+          owner_team_member_id: string
+          review_date?: string | null
+          start_date?: string | null
+          status?: Database["public"]["Enums"]["goal_status"]
+          target_date?: string | null
+          timeframe: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          allowed_supports?: string | null
+          approved_at?: string | null
+          approved_by_team_member_id?: string | null
+          baseline_summary?: string
+          case_id?: string
+          conditions?: string | null
+          created_at?: string
+          criterion?: string
+          domain_id?: string | null
+          functional_context?: string | null
+          goal_id?: string
+          goal_type?: Database["public"]["Enums"]["goal_type"]
+          goal_version_id?: string | null
+          human_approval_status?: Database["public"]["Enums"]["goal_human_approval_status"]
+          learner_id?: string
+          observable_behavior?: string
+          owner_team_member_id?: string
+          review_date?: string | null
+          start_date?: string | null
+          status?: Database["public"]["Enums"]["goal_status"]
+          target_date?: string | null
+          timeframe?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "goal_approved_by_team_member_id_team_member_team_member_id_fk"
+            columns: ["approved_by_team_member_id"]
+            isOneToOne: false
+            referencedRelation: "team_member"
+            referencedColumns: ["team_member_id"]
+          },
+          {
+            foreignKeyName: "goal_case_id_case_case_id_fk"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "case"
+            referencedColumns: ["case_id"]
+          },
+          {
+            foreignKeyName: "goal_learner_id_learner_learner_id_fk"
+            columns: ["learner_id"]
+            isOneToOne: false
+            referencedRelation: "learner"
+            referencedColumns: ["learner_id"]
+          },
+          {
+            foreignKeyName: "goal_owner_team_member_id_team_member_team_member_id_fk"
+            columns: ["owner_team_member_id"]
+            isOneToOne: false
+            referencedRelation: "team_member"
+            referencedColumns: ["team_member_id"]
+          },
+        ]
+      }
+      goal_need_link: {
+        Row: {
+          created_at: string
+          goal_id: string
+          goal_need_link_id: string
+          need_id: string
+          primary_link: boolean
+          rationale: string
+          relationship_type: Database["public"]["Enums"]["goal_need_relationship_type"]
+        }
+        Insert: {
+          created_at?: string
+          goal_id: string
+          goal_need_link_id?: string
+          need_id: string
+          primary_link?: boolean
+          rationale: string
+          relationship_type: Database["public"]["Enums"]["goal_need_relationship_type"]
+        }
+        Update: {
+          created_at?: string
+          goal_id?: string
+          goal_need_link_id?: string
+          need_id?: string
+          primary_link?: boolean
+          rationale?: string
+          relationship_type?: Database["public"]["Enums"]["goal_need_relationship_type"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "goal_need_link_goal_id_goal_goal_id_fk"
+            columns: ["goal_id"]
+            isOneToOne: false
+            referencedRelation: "goal"
+            referencedColumns: ["goal_id"]
+          },
+          {
+            foreignKeyName: "goal_need_link_need_id_need_need_id_fk"
+            columns: ["need_id"]
+            isOneToOne: false
+            referencedRelation: "need"
+            referencedColumns: ["need_id"]
+          },
+        ]
+      }
       learner: {
         Row: {
           created_at: string
@@ -181,6 +336,126 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      measurement_plan: {
+        Row: {
+          created_at: string
+          goal_id: string
+          measurement_plan_id: string
+          measurement_type: string
+          target_criterion: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          goal_id: string
+          measurement_plan_id?: string
+          measurement_type: string
+          target_criterion: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          goal_id?: string
+          measurement_plan_id?: string
+          measurement_type?: string
+          target_criterion?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "measurement_plan_goal_id_goal_goal_id_fk"
+            columns: ["goal_id"]
+            isOneToOne: false
+            referencedRelation: "goal"
+            referencedColumns: ["goal_id"]
+          },
+        ]
+      }
+      need: {
+        Row: {
+          case_id: string
+          created_at: string
+          description: string
+          domain_id: string | null
+          functional_impact: string
+          identified_at: string
+          identified_by_team_member_id: string
+          learner_id: string
+          need_id: string
+          need_type: Database["public"]["Enums"]["need_type"]
+          priority_basis: Database["public"]["Enums"]["need_priority_basis"]
+          priority_level: Database["public"]["Enums"]["need_priority_level"]
+          review_due_date: string | null
+          source_confidence: Database["public"]["Enums"]["need_source_confidence"]
+          status: Database["public"]["Enums"]["need_status"]
+          subdomain_id: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          case_id: string
+          created_at?: string
+          description: string
+          domain_id?: string | null
+          functional_impact: string
+          identified_at?: string
+          identified_by_team_member_id: string
+          learner_id: string
+          need_id?: string
+          need_type: Database["public"]["Enums"]["need_type"]
+          priority_basis: Database["public"]["Enums"]["need_priority_basis"]
+          priority_level: Database["public"]["Enums"]["need_priority_level"]
+          review_due_date?: string | null
+          source_confidence?: Database["public"]["Enums"]["need_source_confidence"]
+          status?: Database["public"]["Enums"]["need_status"]
+          subdomain_id?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          case_id?: string
+          created_at?: string
+          description?: string
+          domain_id?: string | null
+          functional_impact?: string
+          identified_at?: string
+          identified_by_team_member_id?: string
+          learner_id?: string
+          need_id?: string
+          need_type?: Database["public"]["Enums"]["need_type"]
+          priority_basis?: Database["public"]["Enums"]["need_priority_basis"]
+          priority_level?: Database["public"]["Enums"]["need_priority_level"]
+          review_due_date?: string | null
+          source_confidence?: Database["public"]["Enums"]["need_source_confidence"]
+          status?: Database["public"]["Enums"]["need_status"]
+          subdomain_id?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "need_case_id_case_case_id_fk"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "case"
+            referencedColumns: ["case_id"]
+          },
+          {
+            foreignKeyName: "need_identified_by_team_member_id_team_member_team_member_id_fk"
+            columns: ["identified_by_team_member_id"]
+            isOneToOne: false
+            referencedRelation: "team_member"
+            referencedColumns: ["team_member_id"]
+          },
+          {
+            foreignKeyName: "need_learner_id_learner_learner_id_fk"
+            columns: ["learner_id"]
+            isOneToOne: false
+            referencedRelation: "learner"
+            referencedColumns: ["learner_id"]
+          },
+        ]
       }
       team_member: {
         Row: {
@@ -214,7 +489,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_case_access: { Args: { _case_id: string }; Returns: boolean }
     }
     Enums: {
       case_confidentiality_level:
@@ -253,6 +528,65 @@ export type Database = {
         | "therapy"
         | "vocational"
         | "combined"
+      goal_human_approval_status:
+        | "pending"
+        | "approved"
+        | "approved_with_conditions"
+        | "rejected"
+      goal_need_relationship_type:
+        | "directly_addresses"
+        | "partially_addresses"
+        | "supports"
+      goal_status:
+        | "draft"
+        | "in_review"
+        | "approved"
+        | "active"
+        | "paused"
+        | "generalization_pending"
+        | "generalized"
+        | "revised"
+        | "closed"
+        | "archived"
+      goal_type:
+        | "academic"
+        | "communication"
+        | "behavior"
+        | "functional"
+        | "adaptive"
+        | "vocational"
+        | "transition"
+        | "therapy"
+        | "self_determination"
+      need_priority_basis:
+        | "assessment"
+        | "learner_priority"
+        | "family_priority"
+        | "team_decision"
+        | "transition_requirement"
+        | "safety"
+      need_priority_level: "low" | "medium" | "high" | "critical"
+      need_source_confidence: "low" | "medium" | "high"
+      need_status:
+        | "draft"
+        | "active"
+        | "addressed_by_goal"
+        | "addressed_by_support"
+        | "monitor"
+        | "deferred"
+        | "resolved"
+        | "archived"
+      need_type:
+        | "skill_gap"
+        | "access_barrier"
+        | "environmental_barrier"
+        | "communication"
+        | "behavior"
+        | "functional"
+        | "vocational"
+        | "transition"
+        | "safety"
+        | "assessment_gap"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -420,6 +754,72 @@ export const Constants = {
         "therapy",
         "vocational",
         "combined",
+      ],
+      goal_human_approval_status: [
+        "pending",
+        "approved",
+        "approved_with_conditions",
+        "rejected",
+      ],
+      goal_need_relationship_type: [
+        "directly_addresses",
+        "partially_addresses",
+        "supports",
+      ],
+      goal_status: [
+        "draft",
+        "in_review",
+        "approved",
+        "active",
+        "paused",
+        "generalization_pending",
+        "generalized",
+        "revised",
+        "closed",
+        "archived",
+      ],
+      goal_type: [
+        "academic",
+        "communication",
+        "behavior",
+        "functional",
+        "adaptive",
+        "vocational",
+        "transition",
+        "therapy",
+        "self_determination",
+      ],
+      need_priority_basis: [
+        "assessment",
+        "learner_priority",
+        "family_priority",
+        "team_decision",
+        "transition_requirement",
+        "safety",
+      ],
+      need_priority_level: ["low", "medium", "high", "critical"],
+      need_source_confidence: ["low", "medium", "high"],
+      need_status: [
+        "draft",
+        "active",
+        "addressed_by_goal",
+        "addressed_by_support",
+        "monitor",
+        "deferred",
+        "resolved",
+        "archived",
+      ],
+      need_type: [
+        "skill_gap",
+        "access_barrier",
+        "environmental_barrier",
+        "communication",
+        "behavior",
+        "functional",
+        "vocational",
+        "transition",
+        "safety",
+        "assessment_gap",
       ],
     },
   },

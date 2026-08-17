@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { NeedsSection } from "@/components/case-workspace/NeedsSection";
 import type { Database } from "@/integrations/supabase/types";
 
 type CaseRow = Database["public"]["Tables"]["case"]["Row"];
@@ -270,6 +271,8 @@ function CaseWorkspacePage() {
           </p>
         </Section>
       </div>
+
+      <NeedsSection caseId={c.case_id} learnerId={c.learner_id} />
 
       <Section title="الخط الزمني المختصر">
         <ol className="space-y-3 border-r border-border pr-4">
