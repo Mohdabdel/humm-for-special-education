@@ -14,7 +14,198 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      case: {
+        Row: {
+          case_id: string
+          case_number: string
+          case_type: Database["public"]["Enums"]["case_type"]
+          close_date: string | null
+          confidentiality_level: Database["public"]["Enums"]["case_confidentiality_level"]
+          created_at: string
+          created_by: string | null
+          current_priority_summary: string | null
+          intake_date: string
+          last_activity_at: string
+          learner_id: string
+          organization_id: string
+          owner_team_member_id: string | null
+          primary_stage: Database["public"]["Enums"]["case_primary_stage"]
+          program_id: string | null
+          risk_level: Database["public"]["Enums"]["case_risk_level"]
+          start_date: string
+          status: Database["public"]["Enums"]["case_status"]
+          target_review_date: string | null
+          transition_stage:
+            | Database["public"]["Enums"]["case_transition_stage"]
+            | null
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          case_id?: string
+          case_number: string
+          case_type?: Database["public"]["Enums"]["case_type"]
+          close_date?: string | null
+          confidentiality_level?: Database["public"]["Enums"]["case_confidentiality_level"]
+          created_at?: string
+          created_by?: string | null
+          current_priority_summary?: string | null
+          intake_date: string
+          last_activity_at?: string
+          learner_id: string
+          organization_id: string
+          owner_team_member_id?: string | null
+          primary_stage?: Database["public"]["Enums"]["case_primary_stage"]
+          program_id?: string | null
+          risk_level?: Database["public"]["Enums"]["case_risk_level"]
+          start_date: string
+          status?: Database["public"]["Enums"]["case_status"]
+          target_review_date?: string | null
+          transition_stage?:
+            | Database["public"]["Enums"]["case_transition_stage"]
+            | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          case_id?: string
+          case_number?: string
+          case_type?: Database["public"]["Enums"]["case_type"]
+          close_date?: string | null
+          confidentiality_level?: Database["public"]["Enums"]["case_confidentiality_level"]
+          created_at?: string
+          created_by?: string | null
+          current_priority_summary?: string | null
+          intake_date?: string
+          last_activity_at?: string
+          learner_id?: string
+          organization_id?: string
+          owner_team_member_id?: string | null
+          primary_stage?: Database["public"]["Enums"]["case_primary_stage"]
+          program_id?: string | null
+          risk_level?: Database["public"]["Enums"]["case_risk_level"]
+          start_date?: string
+          status?: Database["public"]["Enums"]["case_status"]
+          target_review_date?: string | null
+          transition_stage?:
+            | Database["public"]["Enums"]["case_transition_stage"]
+            | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "case_learner_id_learner_learner_id_fk"
+            columns: ["learner_id"]
+            isOneToOne: false
+            referencedRelation: "learner"
+            referencedColumns: ["learner_id"]
+          },
+          {
+            foreignKeyName: "case_owner_team_member_id_team_member_team_member_id_fk"
+            columns: ["owner_team_member_id"]
+            isOneToOne: false
+            referencedRelation: "team_member"
+            referencedColumns: ["team_member_id"]
+          },
+        ]
+      }
+      case_membership: {
+        Row: {
+          case_id: string
+          created_at: string
+          ended_at: string | null
+          id: string
+          role: Database["public"]["Enums"]["case_membership_role"]
+          started_at: string
+          team_member_id: string
+        }
+        Insert: {
+          case_id: string
+          created_at?: string
+          ended_at?: string | null
+          id?: string
+          role: Database["public"]["Enums"]["case_membership_role"]
+          started_at?: string
+          team_member_id: string
+        }
+        Update: {
+          case_id?: string
+          created_at?: string
+          ended_at?: string | null
+          id?: string
+          role?: Database["public"]["Enums"]["case_membership_role"]
+          started_at?: string
+          team_member_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "case_membership_case_id_case_case_id_fk"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "case"
+            referencedColumns: ["case_id"]
+          },
+          {
+            foreignKeyName: "case_membership_team_member_id_team_member_team_member_id_fk"
+            columns: ["team_member_id"]
+            isOneToOne: false
+            referencedRelation: "team_member"
+            referencedColumns: ["team_member_id"]
+          },
+        ]
+      }
+      learner: {
+        Row: {
+          created_at: string
+          date_of_birth: string | null
+          full_name: string
+          learner_id: string
+          organization_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          date_of_birth?: string | null
+          full_name: string
+          learner_id?: string
+          organization_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          date_of_birth?: string | null
+          full_name?: string
+          learner_id?: string
+          organization_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      team_member: {
+        Row: {
+          created_at: string
+          full_name: string
+          organization_id: string
+          role: string
+          team_member_id: string
+        }
+        Insert: {
+          created_at?: string
+          full_name: string
+          organization_id: string
+          role: string
+          team_member_id?: string
+        }
+        Update: {
+          created_at?: string
+          full_name?: string
+          organization_id?: string
+          role?: string
+          team_member_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -23,7 +214,42 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      case_confidentiality_level:
+        | "standard"
+        | "restricted"
+        | "highly_restricted"
+      case_membership_role:
+        | "case_manager"
+        | "special_educator"
+        | "therapist"
+        | "supervisor"
+        | "observer"
+      case_primary_stage:
+        | "assessment"
+        | "planning"
+        | "implementation"
+        | "review"
+        | "transition"
+      case_priority_level: "high" | "medium" | "low"
+      case_risk_level: "none" | "watch" | "needs_attention" | "urgent"
+      case_status: "active" | "review_due" | "closed"
+      case_transition_stage:
+        | "not_applicable"
+        | "pre_transition"
+        | "exploration"
+        | "planning"
+        | "vocational_training"
+        | "home_based_project"
+        | "active_implementation"
+        | "employment_or_further_education"
+        | "follow_up"
+      case_type:
+        | "IEP"
+        | "transition"
+        | "behavior"
+        | "therapy"
+        | "vocational"
+        | "combined"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +376,48 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      case_confidentiality_level: [
+        "standard",
+        "restricted",
+        "highly_restricted",
+      ],
+      case_membership_role: [
+        "case_manager",
+        "special_educator",
+        "therapist",
+        "supervisor",
+        "observer",
+      ],
+      case_primary_stage: [
+        "assessment",
+        "planning",
+        "implementation",
+        "review",
+        "transition",
+      ],
+      case_priority_level: ["high", "medium", "low"],
+      case_risk_level: ["none", "watch", "needs_attention", "urgent"],
+      case_status: ["active", "review_due", "closed"],
+      case_transition_stage: [
+        "not_applicable",
+        "pre_transition",
+        "exploration",
+        "planning",
+        "vocational_training",
+        "home_based_project",
+        "active_implementation",
+        "employment_or_further_education",
+        "follow_up",
+      ],
+      case_type: [
+        "IEP",
+        "transition",
+        "behavior",
+        "therapy",
+        "vocational",
+        "combined",
+      ],
+    },
   },
 } as const
