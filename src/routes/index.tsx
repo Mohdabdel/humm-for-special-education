@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
@@ -182,11 +182,12 @@ function CaseWorkspacePage() {
 
   return (
     <Shell>
-      <p className="rounded-md border border-dashed border-border px-3 py-2 text-xs text-muted-foreground">
-        {caseId
-          ? "عرض الحالة المحددة."
-          : "عرض مؤقت لأول حالة متاحة — سيتم استبداله بقائمة الحالات في الخطوة التالية."}
-      </p>
+      <div className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-dashed border-border px-3 py-2 text-xs text-muted-foreground">
+        <span>{caseId ? "عرض الحالة المحددة." : "عرض أول حالة متاحة (بدون تحديد حالة)."}</span>
+        <Link to="/cases" className="font-medium text-primary hover:underline">
+          العودة إلى قائمة الحالات
+        </Link>
+      </div>
 
       <header className="rounded-xl border border-border bg-card p-6 shadow-sm">
         <div className="flex flex-wrap items-start justify-between gap-4">
