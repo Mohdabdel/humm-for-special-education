@@ -1,5 +1,5 @@
 {
-  "id": "d3dd1b50-cb76-4482-9bc1-9356122e8701",
+  "id": "5416d3b3-b0ac-4f57-9db8-d8135c65b75c",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -425,21 +425,9 @@
           "primaryKey": false,
           "notNull": true
         },
-        "full_name_en": {
-          "name": "full_name_en",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
         "date_of_birth": {
           "name": "date_of_birth",
           "type": "date",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "external_reference": {
-          "name": "external_reference",
-          "type": "text",
           "primaryKey": false,
           "notNull": false
         },
@@ -499,39 +487,20 @@
           "primaryKey": false,
           "notNull": true
         },
-        "user_id": {
-          "name": "user_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": false
-        },
         "full_name": {
           "name": "full_name",
           "type": "text",
           "primaryKey": false,
           "notNull": true
         },
-        "full_name_en": {
-          "name": "full_name_en",
+        "role": {
+          "name": "role",
           "type": "text",
           "primaryKey": false,
-          "notNull": false
-        },
-        "job_title_ar": {
-          "name": "job_title_ar",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
+          "notNull": true
         },
         "created_at": {
           "name": "created_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        },
-        "updated_at": {
-          "name": "updated_at",
           "type": "timestamp with time zone",
           "primaryKey": false,
           "notNull": true,
