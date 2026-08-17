@@ -84,6 +84,7 @@ export function NeedsSection({ caseId, learnerId }: NeedsSectionProps) {
   const queryClient = useQueryClient();
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
+  const [functionalImpact, setFunctionalImpact] = useState("");
   const [needType, setNeedType] = useState<NeedType>("skill_gap");
   const [priorityLevel, setPriorityLevel] = useState<NeedPriorityLevel>("medium");
   const [priorityBasis, setPriorityBasis] = useState<NeedPriorityBasis>("assessment");
@@ -108,10 +109,7 @@ export function NeedsSection({ caseId, learnerId }: NeedsSectionProps) {
         learner_id: learnerId,
         title: title.trim(),
         description: description.trim(),
-        // Temporary MVP mapping (Step 2): functional_impact is required by the
-        // schema but is not part of the requested minimal form, so we mirror
-        // the description until a dedicated field is introduced.
-        functional_impact: description.trim(),
+        functional_impact: functionalImpact.trim(),
         need_type: needType,
         priority_level: priorityLevel,
         priority_basis: priorityBasis,
@@ -124,6 +122,7 @@ export function NeedsSection({ caseId, learnerId }: NeedsSectionProps) {
     onSuccess: async () => {
       setTitle("");
       setDescription("");
+      setFunctionalImpact("");
       await queryClient.invalidateQueries({ queryKey: ["needs", caseId] });
     },
   });
@@ -208,6 +207,19 @@ export function NeedsSection({ caseId, learnerId }: NeedsSectionProps) {
                 value={description}
                 required
                 onChange={(e) => setDescription(e.target.value)}
+              />
+            </div>
+            <div>
+              <label htmlFor="need-impact" className="mb-1 block text-xs text-muted-foreground">
+                الأثر الوظيفي
+              </label>
+              <textarea
+                id="need-impact"
+                className={fieldClass}
+                rows={3}
+                value={functionalImpact}
+                required
+                onChange={(e) => setFunctionalImpact(e.target.value)}
               />
             </div>
             <div className="grid gap-3 md:grid-cols-3">
