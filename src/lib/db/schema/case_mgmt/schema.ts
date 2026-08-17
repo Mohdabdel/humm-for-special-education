@@ -81,6 +81,7 @@ export const teamMember = pgTable(
   "team_member",
   {
     teamMemberId: uuid("team_member_id").primaryKey().defaultRandom(),
+    userId: uuid("user_id"),
     organizationId: uuid("organization_id").notNull(),
     fullName: text("full_name").notNull(),
     role: text("role").notNull(),
