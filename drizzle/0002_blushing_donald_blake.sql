@@ -93,4 +93,87 @@ CREATE INDEX "goal_need_link_need_id_idx" ON "goal_need_link" USING btree ("need
 CREATE INDEX "measurement_plan_goal_id_idx" ON "measurement_plan" USING btree ("goal_id");--> statement-breakpoint
 CREATE INDEX "need_case_id_idx" ON "need" USING btree ("case_id");--> statement-breakpoint
 CREATE INDEX "need_learner_id_idx" ON "need" USING btree ("learner_id");--> statement-breakpoint
-CREATE INDEX "need_status_idx" ON "need" USING btree ("status");
+CREATE INDEX "need_status_idx" ON "need" USING btree ("status");--> statement-breakpoint
+-- ============================================================
+-- RLS (hand-written; drizzle-kit does not generate these)
+-- Access rule: the authenticated user must hold an active
+-- case_membership on the owning case, linked via team_member.user_id.
+-- ============================================================
+CREATE OR REPLACE FUNCTION public.has_case_access(_case_id uuid)
+RETURNS boolean
+LANGUAGE sql
+STABLE
+SECURITY DEFINER
+SET search_path = public
+AS $$
+  SELECT EXISTS (
+    SELECT 1
+    FROM public.case_membership cm
+    JOIN public.team_member tm ON tm.team_member_id = cm.team_member_id
+    WHERE cm.case_id = _case_id
+      AND tm.user_id = auth.uid()
+      AND cm.ended_at IS NULL
+  )
+$$;--> statement-breakpoint
+
+GRANT SELECT, INSERT, UPDATE ON public.need TO authenticated;--> statement-breakpoint
+GRANT SELECT, INSERT, UPDATE ON public.goal TO authenticated;--> statement-breakpoint
+GRANT SELECT, INSERT, UPDATE ON public.goal_need_link TO authenticated;--> statement-breakpoint
+GRANT SELECT, INSERT, UPDATE ON public.measurement_plan TO authenticated;--> statement-breakpoint
+GRANT ALL ON public.need TO service_role;--> statement-breakpoint
+GRANT ALL ON public.goal TO service_role;--> statement-breakpoint
+GRANT ALL ON public.goal_need_link TO service_role;--> statement-breakpoint
+GRANT ALL ON public.measurement_plan TO service_role;--> statement-breakpoint
+
+ALTER TABLE public.need ENABLE ROW LEVEL SECURITY;--> statement-breakpoint
+ALTER TABLE public.goal ENABLE ROW LEVEL SECURITY;--> statement-breakpoint
+ALTER TABLE public.goal_need_link ENABLE ROW LEVEL SECURITY;--> statement-breakpoint
+ALTER TABLE public.measurement_plan ENABLE ROW LEVEL SECURITY;--> statement-breakpoint
+
+CREATE POLICY "need_select_case_members" ON public.need
+  FOR SELECT TO authenticated USING (public.has_case_access(case_id));--> statement-breakpoint
+CREATE POLICY "need_insert_case_members" ON public.need
+  FOR INSERT TO authenticated WITH CHECK (public.has_case_access(case_id));--> statement-breakpoint
+CREATE POLICY "need_update_case_members" ON public.need
+  FOR UPDATE TO authenticated USING (public.has_case_access(case_id))
+  WITH CHECK (public.has_case_access(case_id));--> statement-breakpoint
+
+CREATE POLICY "goal_select_case_members" ON public.goal
+  FOR SELECT TO authenticated USING (public.has_case_access(case_id));--> statement-breakpoint
+CREATE POLICY "goal_insert_case_members" ON public.goal
+  FOR INSERT TO authenticated WITH CHECK (public.has_case_access(case_id));--> statement-breakpoint
+CREATE POLICY "goal_update_case_members" ON public.goal
+  FOR UPDATE TO authenticated USING (public.has_case_access(case_id))
+  WITH CHECK (public.has_case_access(case_id));--> statement-breakpoint
+
+CREATE POLICY "goal_need_link_select_case_members" ON public.goal_need_link
+  FOR SELECT TO authenticated USING (
+    EXISTS (SELECT 1 FROM public.goal g WHERE g.goal_id = goal_need_link.goal_id
+            AND public.has_case_access(g.case_id)));--> statement-breakpoint
+CREATE POLICY "goal_need_link_insert_case_members" ON public.goal_need_link
+  FOR INSERT TO authenticated WITH CHECK (
+    EXISTS (SELECT 1 FROM public.goal g WHERE g.goal_id = goal_need_link.goal_id
+            AND public.has_case_access(g.case_id)));--> statement-breakpoint
+CREATE POLICY "goal_need_link_update_case_members" ON public.goal_need_link
+  FOR UPDATE TO authenticated USING (
+    EXISTS (SELECT 1 FROM public.goal g WHERE g.goal_id = goal_need_link.goal_id
+            AND public.has_case_access(g.case_id)))
+  WITH CHECK (
+    EXISTS (SELECT 1 FROM public.goal g WHERE g.goal_id = goal_need_link.goal_id
+            AND public.has_case_access(g.case_id)));--> statement-breakpoint
+
+CREATE POLICY "measurement_plan_select_case_members" ON public.measurement_plan
+  FOR SELECT TO authenticated USING (
+    EXISTS (SELECT 1 FROM public.goal g WHERE g.goal_id = measurement_plan.goal_id
+            AND public.has_case_access(g.case_id)));--> statement-breakpoint
+CREATE POLICY "measurement_plan_insert_case_members" ON public.measurement_plan
+  FOR INSERT TO authenticated WITH CHECK (
+    EXISTS (SELECT 1 FROM public.goal g WHERE g.goal_id = measurement_plan.goal_id
+            AND public.has_case_access(g.case_id)));--> statement-breakpoint
+CREATE POLICY "measurement_plan_update_case_members" ON public.measurement_plan
+  FOR UPDATE TO authenticated USING (
+    EXISTS (SELECT 1 FROM public.goal g WHERE g.goal_id = measurement_plan.goal_id
+            AND public.has_case_access(g.case_id)))
+  WITH CHECK (
+    EXISTS (SELECT 1 FROM public.goal g WHERE g.goal_id = measurement_plan.goal_id
+            AND public.has_case_access(g.case_id)));
