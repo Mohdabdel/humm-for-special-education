@@ -8,6 +8,13 @@
       "when": 1787003165320,
       "tag": "0000_fearless_luckman",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1787003742421,
+      "tag": "0001_shallow_mysterio",
+      "breakpoints": true
     }
   ]
 }
