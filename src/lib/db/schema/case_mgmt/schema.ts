@@ -22,6 +22,48 @@ export const caseMembershipRoleEnum = pgEnum("case_membership_role", [
   "observer",
 ]);
 
+export const caseTypeEnum = pgEnum("case_type", [
+  "IEP",
+  "transition",
+  "behavior",
+  "therapy",
+  "vocational",
+  "combined",
+]);
+
+export const casePrimaryStageEnum = pgEnum("case_primary_stage", [
+  "assessment",
+  "planning",
+  "implementation",
+  "review",
+  "transition",
+]);
+
+export const caseRiskLevelEnum = pgEnum("case_risk_level", [
+  "none",
+  "watch",
+  "needs_attention",
+  "urgent",
+]);
+
+export const caseConfidentialityLevelEnum = pgEnum("case_confidentiality_level", [
+  "standard",
+  "restricted",
+  "highly_restricted",
+]);
+
+export const caseTransitionStageEnum = pgEnum("case_transition_stage", [
+  "not_applicable",
+  "pre_transition",
+  "exploration",
+  "planning",
+  "vocational_training",
+  "home_based_project",
+  "active_implementation",
+  "employment_or_further_education",
+  "follow_up",
+]);
+
 export const learner = pgTable(
   "learner",
   {
@@ -63,8 +105,23 @@ export const caseRecord = pgTable(
       .notNull()
       .references(() => learner.learnerId, { onDelete: "restrict" }),
     caseNumber: text("case_number").notNull(),
+    caseType: caseTypeEnum("case_type").notNull().default("IEP"),
+    programId: uuid("program_id"),
+    ownerTeamMemberId: uuid("owner_team_member_id").references(() => teamMember.teamMemberId, {
+      onDelete: "set null",
+    }),
     titleAr: text("title_ar").notNull(),
     status: caseStatusEnum("status").notNull().default("active"),
+    primaryStage: casePrimaryStageEnum("primary_stage").notNull().default("assessment"),
+    riskLevel: caseRiskLevelEnum("risk_level").notNull().default("none"),
+    confidentialityLevel: caseConfidentialityLevelEnum("confidentiality_level")
+      .notNull()
+      .default("standard"),
+    transitionStage: caseTransitionStageEnum("transition_stage"),
+    intakeDate: date("intake_date").notNull(),
+    startDate: date("start_date").notNull(),
+    targetReviewDate: date("target_review_date"),
+    closeDate: date("close_date"),
     openedAt: timestamp("opened_at", { withTimezone: true }).notNull().defaultNow(),
     reviewDueAt: timestamp("review_due_at", { withTimezone: true }),
     closedAt: timestamp("closed_at", { withTimezone: true }),
@@ -75,12 +132,16 @@ export const caseRecord = pgTable(
     lastActivityAt: timestamp("last_activity_at", { withTimezone: true }).notNull().defaultNow(),
     summaryAr: text("summary_ar"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    createdBy: uuid("created_by"),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedBy: uuid("updated_by"),
   },
   (table) => [
     uniqueIndex("case_org_case_number_key").on(table.organizationId, table.caseNumber),
     index("case_learner_id_idx").on(table.learnerId),
     index("case_status_idx").on(table.status),
+    index("case_owner_team_member_id_idx").on(table.ownerTeamMemberId),
+    index("case_program_id_idx").on(table.programId),
   ],
 );
 
