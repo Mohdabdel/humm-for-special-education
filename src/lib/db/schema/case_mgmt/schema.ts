@@ -121,8 +121,6 @@ export const caseRecord = pgTable(
     startDate: date("start_date").notNull(),
     targetReviewDate: date("target_review_date"),
     closeDate: date("close_date"),
-    reviewDueAt: timestamp("review_due_at", { withTimezone: true }),
-    closedAt: timestamp("closed_at", { withTimezone: true }),
     lastActivityAt: timestamp("last_activity_at", { withTimezone: true }).notNull().defaultNow(),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     createdBy: uuid("created_by"),
