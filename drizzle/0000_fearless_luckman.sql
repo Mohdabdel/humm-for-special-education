@@ -45,9 +45,7 @@ CREATE TABLE "learner" (
 	"learner_id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"organization_id" uuid NOT NULL,
 	"full_name" text NOT NULL,
-	"full_name_en" text,
 	"date_of_birth" date,
-	"external_reference" text,
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
 	"updated_at" timestamp with time zone DEFAULT now() NOT NULL
 );
@@ -55,12 +53,9 @@ CREATE TABLE "learner" (
 CREATE TABLE "team_member" (
 	"team_member_id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"organization_id" uuid NOT NULL,
-	"user_id" uuid,
 	"full_name" text NOT NULL,
-	"full_name_en" text,
-	"job_title_ar" text,
-	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
-	"updated_at" timestamp with time zone DEFAULT now() NOT NULL
+	"role" text NOT NULL,
+	"created_at" timestamp with time zone DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
 ALTER TABLE "case_membership" ADD CONSTRAINT "case_membership_case_id_case_case_id_fk" FOREIGN KEY ("case_id") REFERENCES "public"."case"("case_id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
