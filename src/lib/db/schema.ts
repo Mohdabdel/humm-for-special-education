@@ -1,3 +1,4 @@
-// Database schema tables will be defined in subsequent build steps.
-// Do not add tables here until the schema design phase begins.
-export {};
+// Aggregated Drizzle schema entry point (used by drizzle.config.ts).
+// Phase 1 exposes only the case management entities:
+// Learner, TeamMember, Case, CaseMembership.
+export * from "./schema/case_mgmt/schema";
