@@ -110,7 +110,6 @@ export const caseRecord = pgTable(
     ownerTeamMemberId: uuid("owner_team_member_id").references(() => teamMember.teamMemberId, {
       onDelete: "set null",
     }),
-    titleAr: text("title_ar").notNull(),
     status: caseStatusEnum("status").notNull().default("active"),
     primaryStage: casePrimaryStageEnum("primary_stage").notNull().default("assessment"),
     riskLevel: caseRiskLevelEnum("risk_level").notNull().default("none"),
@@ -122,15 +121,9 @@ export const caseRecord = pgTable(
     startDate: date("start_date").notNull(),
     targetReviewDate: date("target_review_date"),
     closeDate: date("close_date"),
-    openedAt: timestamp("opened_at", { withTimezone: true }).notNull().defaultNow(),
     reviewDueAt: timestamp("review_due_at", { withTimezone: true }),
     closedAt: timestamp("closed_at", { withTimezone: true }),
-    // Closure is always a human decision (Approval Gate). Never set automatically.
-    closedByTeamMemberId: uuid("closed_by_team_member_id").references(() => teamMember.teamMemberId, {
-      onDelete: "set null",
-    }),
     lastActivityAt: timestamp("last_activity_at", { withTimezone: true }).notNull().defaultNow(),
-    summaryAr: text("summary_ar"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     createdBy: uuid("created_by"),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
