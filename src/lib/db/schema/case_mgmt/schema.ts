@@ -70,9 +70,7 @@ export const learner = pgTable(
     learnerId: uuid("learner_id").primaryKey().defaultRandom(),
     organizationId: uuid("organization_id").notNull(),
     fullName: text("full_name").notNull(),
-    fullNameEn: text("full_name_en"),
     dateOfBirth: date("date_of_birth"),
-    externalReference: text("external_reference"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },
@@ -84,13 +82,9 @@ export const teamMember = pgTable(
   {
     teamMemberId: uuid("team_member_id").primaryKey().defaultRandom(),
     organizationId: uuid("organization_id").notNull(),
-    // References auth.users(id) in Supabase; kept as a plain uuid at the Drizzle level.
-    userId: uuid("user_id"),
     fullName: text("full_name").notNull(),
-    fullNameEn: text("full_name_en"),
-    jobTitleAr: text("job_title_ar"),
+    role: text("role").notNull(),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
-    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (table) => [index("team_member_organization_id_idx").on(table.organizationId)],
 );
