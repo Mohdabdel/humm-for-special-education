@@ -13,6 +13,8 @@ type WorkspaceData =
   | { kind: "ready"; row: CaseRow };
 
 export const Route = createFileRoute("/")({
+  validateSearch: (search: Record<string, unknown>): { case_id?: string } =>
+    typeof search["case_id"] === "string" ? { case_id: search["case_id"] } : {},
   head: () => ({
     meta: [
       { title: "مساحة عمل الحالة | منصة همم" },
@@ -106,8 +108,8 @@ function Shell({ children }: { children: React.ReactNode }) {
 }
 
 function CaseWorkspacePage() {
-  const search = Route.useSearch() as { case_id?: string };
-  const caseId = typeof search.case_id === "string" ? search.case_id : undefined;
+  const search = Route.useSearch();
+  const caseId = search.case_id;
 
   const { data, isPending, error } = useQuery({
     queryKey: ["case-workspace", caseId ?? "first"],
