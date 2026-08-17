@@ -1,0 +1,95 @@
+name: HIMAM Checks (Phase 1)
+
+# يعمل هذا الملف على كل push وعلى كل Pull Request إلى الفرع الرئيسي.
+# يطبّق فقط البندين 1 و5 من قائمة الفحوصات المتفق عليها (HIMAM-KB-EXECUTION-CHECKLIST-v1.0):
+#   1) TypeScript strict mode — لا يمر كود غير مضبوط النوع بصمت
+#   5) فحص تسرّب الأسرار/مفاتيح Supabase — الأكثر إلحاحًا لأنه أمني حرج
+# بقية الفحوصات (اختبارات الحوكمة، RTL، تطابق أسماء الجداول) تُضاف لاحقًا
+# في ملفات/خطوات منفصلة، وليس هنا، حتى تبقى كل إضافة قابلة للمراجعة وحدها.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  # ─────────────────────────────────────────────
+  # البند 1: TypeScript Strict Mode
+  # ─────────────────────────────────────────────
+  typescript-strict:
+    name: "1 — TypeScript Strict Check"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      # يفشل الفحص فورًا إن كان tsconfig.json لا يفعّل strict، بدل الاعتماد
+      # فقط على أن يكون الكود نفسه خاليًا من الأخطاء اللحظية.
+      - name: Verify tsconfig has strict mode enabled
+        run: |
+          if ! grep -q '"strict"[[:space:]]*:[[:space:]]*true' tsconfig.json; then
+            echo "❌ tsconfig.json does not have \"strict\": true"
+            echo "HIMAM governance rule: TypeScript strict mode is mandatory."
+            exit 1
+          fi
+          echo "✅ strict mode is enabled in tsconfig.json"
+
+      - name: Run TypeScript compiler check (no emit)
+        run: npx tsc --noEmit --strict
+
+      # فحص إضافي خفيف: يمنع استخدام "any" الصريح في الكود المصدري،
+      # لأن tsc --strict وحده لا يمنع الكتابة الصريحة لـ any.
+      - name: Block explicit "any" usage
+        run: |
+          if grep -rn --include="*.ts" --include="*.tsx" -E ':\s*any\b|as any\b' src/ 2>/dev/null; then
+            echo "❌ Explicit 'any' usage found. HIMAM governance rule: no 'any'."
+            exit 1
+          fi
+          echo "✅ No explicit 'any' usage found"
+
+  # ─────────────────────────────────────────────
+  # البند 5: فحص تسرّب الأسرار (مفاتيح Supabase وغيرها)
+  # ─────────────────────────────────────────────
+  secrets-scan:
+    name: "5 — Secrets & Keys Leak Scan"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # ضروري ليفحص Gitleaks كامل تاريخ الفرع لا آخر commit فقط
+
+      - name: Run Gitleaks secret scan
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # فحص إضافي مخصص: أنماط شائعة لمفاتيح Supabase تحديدًا
+      # (تكميلي لـ Gitleaks لا بديل عنه)
+      - name: Scan for Supabase-specific key patterns
+        run: |
+          PATTERN='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9|SUPABASE_SERVICE_ROLE_KEY\s*=\s*["'"'"'][A-Za-z0-9._-]{20,}'
+          if grep -rnE "$PATTERN" --include="*.ts" --include="*.tsx" --include="*.js" --include="*.jsx" --include="*.env*" . 2>/dev/null | grep -v -E '\.env\.example|node_modules'; then
+            echo "❌ Possible Supabase key/JWT found hardcoded in source."
+            echo "HIMAM governance rule: no secrets in code. Use environment variables only."
+            exit 1
+          fi
+          echo "✅ No hardcoded Supabase keys detected"
+
+      - name: Verify .env files are gitignored
+        run: |
+          if [ -f .env ] && ! grep -qE '^\.env$|^\.env\*$' .gitignore 2>/dev/null; then
+            echo "❌ .env file exists but is not properly gitignored."
+            exit 1
+          fi
+          echo "✅ .env handling looks safe"
