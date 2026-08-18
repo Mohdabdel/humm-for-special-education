@@ -8,6 +8,7 @@ import { TodaysSessionsSection } from "@/components/case-workspace/TodaysSession
 import { SessionCard } from "@/components/case-workspace/SessionCard";
 import { QuickCapturePanel } from "@/components/case-workspace/QuickCapturePanel";
 import { SessionCreationPanel } from "@/components/case-workspace/SessionCreationPanel";
+import { MeasurementDefinitionsSection } from "@/components/case-workspace/MeasurementDefinitionsSection";
 import { LogoutButton } from "@/components/LogoutButton";
 import type { Database } from "@/integrations/supabase/types";
 
@@ -293,6 +294,8 @@ function CaseWorkspacePage() {
       <NeedsSection caseId={c.case_id} learnerId={c.learner_id} />
 
       <GoalsSection caseId={c.case_id} learnerId={c.learner_id} />
+
+      <MeasurementDefinitionsSection caseId={c.case_id} />
 
       <TodaysSessionsSection
         caseId={c.case_id}
