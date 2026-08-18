@@ -387,6 +387,172 @@ export function QuickCapturePanel({ caseId, learnerId }: QuickCapturePanelProps)
             </div>
           </div>
 
+          {selectedSession ? (
+            <p className="rounded-md bg-muted px-3 py-2 text-xs text-muted-foreground">
+              حالة إنجاز الجلسة المرتبطة:{" "}
+              <span className="font-medium text-foreground">
+                {selectedSession.completion_status
+                  ? SESSION_COMPLETION_LABEL_AR[selectedSession.completion_status]
+                  : "غير محددة بعد"}
+              </span>{" "}
+              (للعرض فقط)
+            </p>
+          ) : null}
+
+          {goalId === "" ? null : definitionsQuery.isPending ? (
+            <p className="text-xs text-muted-foreground">جارٍ تحميل مؤشرات القياس المفعّلة…</p>
+          ) : definitionsQuery.error ? (
+            <p className="text-xs text-destructive">تعذر تحميل مؤشرات القياس.</p>
+          ) : activeDefinitions.length === 0 ? (
+            <p className="rounded-md bg-muted px-3 py-2 text-xs text-muted-foreground">
+              لا يوجد مؤشر قياس مفعّل لهذا الهدف، لذا لا يمكن تسجيل نقطة بيانات الآن.
+            </p>
+          ) : (
+            <div className="rounded-lg border border-border p-3">
+              <label className="flex items-center gap-2 text-sm text-card-foreground">
+                <input
+                  type="checkbox"
+                  checked={includeDataPoint}
+                  onChange={(e) => {
+                    setIncludeDataPoint(e.target.checked);
+                    if (e.target.checked && definitionId === "") {
+                      setDefinitionId(activeDefinitions[0]!.measurement_definition_id);
+                    }
+                  }}
+                />
+                تسجيل نقطة بيانات مع هذه الملاحظة
+              </label>
+
+              {includeDataPoint ? (
+                <div className="mt-3 space-y-3">
+                  <div>
+                    <label htmlFor="qc-def" className="mb-1 block text-xs text-muted-foreground">
+                      مؤشر القياس
+                    </label>
+                    <select
+                      id="qc-def"
+                      className={fieldClass}
+                      value={definitionId}
+                      onChange={(e) => setDefinitionId(e.target.value)}
+                    >
+                      {activeDefinitions.map((d) => (
+                        <option key={d.measurement_definition_id} value={d.measurement_definition_id}>
+                          {d.label_ar} ({d.code})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="grid gap-3 md:grid-cols-3">
+                    <div>
+                      <label htmlFor="qc-value" className="mb-1 block text-xs text-muted-foreground">
+                        القيمة الرقمية
+                      </label>
+                      <input
+                        id="qc-value"
+                        type="number"
+                        step="any"
+                        className={fieldClass}
+                        value={valueNumeric}
+                        onChange={(e) => setValueNumeric(e.target.value)}
+                      />
+                    </div>
+                    <div>
+                      <label htmlFor="qc-num" className="mb-1 block text-xs text-muted-foreground">
+                        البسط
+                      </label>
+                      <input
+                        id="qc-num"
+                        type="number"
+                        step="any"
+                        className={fieldClass}
+                        value={numerator}
+                        onChange={(e) => setNumerator(e.target.value)}
+                      />
+                    </div>
+                    <div>
+                      <label htmlFor="qc-den" className="mb-1 block text-xs text-muted-foreground">
+                        المقام
+                      </label>
+                      <input
+                        id="qc-den"
+                        type="number"
+                        step="any"
+                        className={fieldClass}
+                        value={denominator}
+                        onChange={(e) => setDenominator(e.target.value)}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid gap-3 md:grid-cols-3">
+                    <div>
+                      <label htmlFor="qc-unit" className="mb-1 block text-xs text-muted-foreground">
+                        الوحدة
+                      </label>
+                      <select
+                        id="qc-unit"
+                        className={fieldClass}
+                        value={unit}
+                        onChange={(e) => setUnit(e.target.value as DataPointUnit)}
+                      >
+                        {(Object.keys(DATA_POINT_UNIT_LABEL_AR) as DataPointUnit[]).map((k) => (
+                          <option key={k} value={k}>
+                            {DATA_POINT_UNIT_LABEL_AR[k]}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label
+                        htmlFor="qc-outcome"
+                        className="mb-1 block text-xs text-muted-foreground"
+                      >
+                        رمز النتيجة
+                      </label>
+                      <select
+                        id="qc-outcome"
+                        className={fieldClass}
+                        value={outcomeCode}
+                        onChange={(e) => setOutcomeCode(e.target.value as DataPointOutcomeCode)}
+                      >
+                        {(Object.keys(DATA_POINT_OUTCOME_LABEL_AR) as DataPointOutcomeCode[]).map(
+                          (k) => (
+                            <option key={k} value={k}>
+                              {DATA_POINT_OUTCOME_LABEL_AR[k]}
+                            </option>
+                          ),
+                        )}
+                      </select>
+                    </div>
+                    <div>
+                      <label
+                        htmlFor="qc-recorded-at"
+                        className="mb-1 block text-xs text-muted-foreground"
+                      >
+                        وقت التسجيل
+                      </label>
+                      <input
+                        id="qc-recorded-at"
+                        type="datetime-local"
+                        required
+                        className={fieldClass}
+                        value={recordedAt}
+                        onChange={(e) => setRecordedAt(e.target.value)}
+                      />
+                    </div>
+                  </div>
+
+                  <p className="text-xs text-muted-foreground">
+                    تُسجَّل نقطة البيانات دائماً بمصدر «يدوي» وبحالة تحقق «مسودة».
+                  </p>
+                </div>
+              ) : null}
+            </div>
+          )}
+
+
+
           <div className="flex flex-wrap items-center gap-3">
             <button
               type="submit"
