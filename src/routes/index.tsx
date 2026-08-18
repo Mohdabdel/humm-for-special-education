@@ -116,11 +116,13 @@ function Shell({ children }: { children: React.ReactNode }) {
 function CaseWorkspacePage() {
   const search = Route.useSearch();
   const caseId = search.case_id;
+  const [selectedSessionId, setSelectedSessionId] = useState<string | null>(null);
 
   const { data, isPending, error } = useQuery({
     queryKey: ["case-workspace", caseId ?? "first"],
     queryFn: () => loadWorkspace(caseId),
   });
+
 
   if (isPending) {
     return (
