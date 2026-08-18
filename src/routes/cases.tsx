@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { LogoutButton } from "@/components/LogoutButton";
 import type { Database } from "@/integrations/supabase/types";
 
 type CaseRow = Database["public"]["Tables"]["case"]["Row"];
