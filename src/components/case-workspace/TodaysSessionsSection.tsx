@@ -92,23 +92,34 @@ export function TodaysSessionsSection({
         <p className="text-sm text-muted-foreground">لا توجد جلسات مجدولة لهذا اليوم.</p>
       ) : (
         <ul className="space-y-2">
-          {sessions.map((s) => (
-            <li
-              key={s.session_id}
-              className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-border px-3 py-2"
-            >
-              <span className="text-sm font-medium text-card-foreground">
-                {SESSION_TYPE_LABEL_AR[s.session_type]}
-              </span>
-              <span className="text-sm text-muted-foreground">{formatTime(s.scheduled_start_at)}</span>
-              <span
-                className={`rounded-full px-2 py-0.5 text-xs font-medium ${statusClasses(s.status)}`}
-              >
-                {SESSION_STATUS_LABEL_AR[s.status]}
-              </span>
-            </li>
-          ))}
+          {sessions.map((s) => {
+            const isSelected = selectedSessionId === s.session_id;
+            return (
+              <li key={s.session_id}>
+                <button
+                  type="button"
+                  onClick={() => onSelectSession?.(s.session_id)}
+                  className={`flex w-full flex-wrap items-center justify-between gap-2 rounded-md border px-3 py-2 text-right transition-colors ${
+                    isSelected
+                      ? "border-primary bg-primary/5"
+                      : "border-border bg-card hover:bg-muted/50"
+                  }`}
+                >
+                  <span className="text-sm font-medium text-card-foreground">
+                    {SESSION_TYPE_LABEL_AR[s.session_type]}
+                  </span>
+                  <span className="text-sm text-muted-foreground">{formatTime(s.scheduled_start_at)}</span>
+                  <span
+                    className={`rounded-full px-2 py-0.5 text-xs font-medium ${statusClasses(s.status)}`}
+                  >
+                    {SESSION_STATUS_LABEL_AR[s.status]}
+                  </span>
+                </button>
+              </li>
+            );
+          })}
         </ul>
+
       )}
     </section>
   );
