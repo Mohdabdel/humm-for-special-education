@@ -4,17 +4,18 @@ import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
 
 type DataPointRow = Database["public"]["Tables"]["data_point"]["Row"];
-type GoalRow = Database["public"]["Tables"]["goal"]["Row"];
-type MeasurementDefinitionRow = Database["public"]["Tables"]["measurement_definition"]["Row"];
 
-async function loadGoals(caseId: string): Promise<GoalRow[]> {
+type GoalOption = { goal_id: string; title: string };
+type DefinitionLabel = { measurement_definition_id: string; label_ar: string };
+
+async function loadGoals(caseId: string): Promise<GoalOption[]> {
   const { data, error } = await supabase
     .from("goal")
     .select("goal_id, title")
     .eq("case_id", caseId)
     .order("created_at", { ascending: false });
   if (error) throw error;
-  return data ?? [];
+  return (data ?? []) as GoalOption[];
 }
 
 async function loadDataPoints(goalId: string): Promise<DataPointRow[]> {
@@ -27,14 +28,14 @@ async function loadDataPoints(goalId: string): Promise<DataPointRow[]> {
   return data ?? [];
 }
 
-async function loadDefinitionsByIds(ids: string[]): Promise<MeasurementDefinitionRow[]> {
+async function loadDefinitionsByIds(ids: string[]): Promise<DefinitionLabel[]> {
   if (ids.length === 0) return [];
   const { data, error } = await supabase
     .from("measurement_definition")
     .select("measurement_definition_id, label_ar")
     .in("measurement_definition_id", ids);
   if (error) throw error;
-  return data ?? [];
+  return (data ?? []) as DefinitionLabel[];
 }
 
 interface ProgressHistorySectionProps {
