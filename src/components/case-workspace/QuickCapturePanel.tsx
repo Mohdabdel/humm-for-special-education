@@ -5,6 +5,35 @@ import type { Database } from "@/integrations/supabase/types";
 
 type ObservationType = Database["public"]["Enums"]["observation_type"];
 type ObservationPurpose = Database["public"]["Enums"]["observation_purpose"];
+type DataPointUnit = Database["public"]["Enums"]["data_point_unit"];
+type DataPointOutcomeCode = Database["public"]["Enums"]["data_point_outcome_code"];
+type SessionCompletionStatus = Database["public"]["Enums"]["session_completion_status"];
+
+const DATA_POINT_UNIT_LABEL_AR: Record<DataPointUnit, string> = {
+  percent: "نسبة مئوية",
+  count: "عدد",
+  duration_seconds: "مدة (ثوانٍ)",
+  duration_minutes: "مدة (دقائق)",
+  latency_seconds: "زمن الاستجابة (ثوانٍ)",
+  rate: "معدل",
+  rubric_score: "درجة روبرك",
+  prompt_level: "مستوى التلميح",
+  productivity_rate: "معدل الإنتاجية",
+};
+
+const DATA_POINT_OUTCOME_LABEL_AR: Record<DataPointOutcomeCode, string> = {
+  success: "ناجح",
+  partial: "جزئي",
+  unsuccessful: "غير ناجح",
+  not_applicable: "غير منطبق",
+};
+
+const SESSION_COMPLETION_LABEL_AR: Record<SessionCompletionStatus, string> = {
+  complete: "مكتملة",
+  partial: "جزئية",
+  not_completed: "غير مكتملة",
+};
+
 
 const OBSERVATION_TYPE_LABEL_AR: Record<ObservationType, string> = {
   structured: "منظَّمة",
@@ -46,13 +75,18 @@ async function loadCurrentTeamMemberId(): Promise<string | null> {
   return data?.[0]?.team_member_id ?? null;
 }
 
-async function loadTodaysSessionOptions(
-  caseId: string,
-): Promise<Array<{ session_id: string; scheduled_start_at: string | null; session_type: string }>> {
+interface SessionOption {
+  session_id: string;
+  scheduled_start_at: string | null;
+  session_type: string;
+  completion_status: SessionCompletionStatus | null;
+}
+
+async function loadTodaysSessionOptions(caseId: string): Promise<SessionOption[]> {
   const { startIso, endIso } = getTodayRange();
   const { data, error } = await supabase
     .from("session")
-    .select("session_id, scheduled_start_at, session_type")
+    .select("session_id, scheduled_start_at, session_type, completion_status")
     .eq("case_id", caseId)
     .gte("scheduled_start_at", startIso)
     .lt("scheduled_start_at", endIso)
@@ -60,6 +94,34 @@ async function loadTodaysSessionOptions(
   if (error) throw error;
   return data ?? [];
 }
+
+interface ActiveDefinitionOption {
+  measurement_definition_id: string;
+  code: string;
+  label_ar: string;
+  unit: string;
+  numerator_label: string | null;
+  denominator_label: string | null;
+}
+
+async function loadActiveDefinitions(goalId: string): Promise<ActiveDefinitionOption[]> {
+  const { data, error } = await supabase
+    .from("measurement_definition")
+    .select("measurement_definition_id, code, label_ar, unit, numerator_label, denominator_label")
+    .eq("goal_id", goalId)
+    .eq("status", "active")
+    .order("created_at", { ascending: true });
+  if (error) throw error;
+  return data ?? [];
+}
+
+function toLocalInputValue(date: Date): string {
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(
+    date.getHours(),
+  )}:${pad(date.getMinutes())}`;
+}
+
 
 async function loadGoalOptions(
   caseId: string,
@@ -96,6 +158,15 @@ export function QuickCapturePanel({ caseId, learnerId }: QuickCapturePanelProps)
   const [sessionId, setSessionId] = useState<string>("");
   const [goalId, setGoalId] = useState<string>("");
 
+  const [includeDataPoint, setIncludeDataPoint] = useState(false);
+  const [definitionId, setDefinitionId] = useState<string>("");
+  const [valueNumeric, setValueNumeric] = useState<string>("");
+  const [numerator, setNumerator] = useState<string>("");
+  const [denominator, setDenominator] = useState<string>("");
+  const [unit, setUnit] = useState<DataPointUnit>("percent");
+  const [outcomeCode, setOutcomeCode] = useState<DataPointOutcomeCode>("partial");
+  const [recordedAt, setRecordedAt] = useState<string>(() => toLocalInputValue(new Date()));
+
   const teamMemberQuery = useQuery({
     queryKey: ["current-team-member"],
     queryFn: loadCurrentTeamMemberId,
@@ -108,33 +179,83 @@ export function QuickCapturePanel({ caseId, learnerId }: QuickCapturePanelProps)
     queryKey: ["quick-capture-goals", caseId],
     queryFn: () => loadGoalOptions(caseId),
   });
+  const definitionsQuery = useQuery({
+    queryKey: ["quick-capture-active-definitions", goalId],
+    queryFn: () => loadActiveDefinitions(goalId),
+    enabled: goalId !== "",
+  });
 
   const teamMemberId = teamMemberQuery.data ?? null;
+  const activeDefinitions = goalId === "" ? [] : (definitionsQuery.data ?? []);
+  const selectedSession =
+    sessionId === ""
+      ? null
+      : ((sessionsQuery.data ?? []).find((s) => s.session_id === sessionId) ?? null);
 
   const createObservation = useMutation({
     mutationFn: async () => {
       if (!teamMemberId) throw new Error("no_team_member");
-      const { error } = await supabase.from("observation").insert({
-        case_id: caseId,
-        learner_id: learnerId,
-        observer_team_member_id: teamMemberId,
-        session_id: sessionId === "" ? null : sessionId,
-        goal_id: goalId === "" ? null : goalId,
-        observation_type: observationType,
-        purpose,
-        narrative_text: narrativeText.trim(),
-        status: "draft",
-        observed_at: new Date().toISOString(),
-      });
+      const { data: inserted, error } = await supabase
+        .from("observation")
+        .insert({
+          case_id: caseId,
+          learner_id: learnerId,
+          observer_team_member_id: teamMemberId,
+          session_id: sessionId === "" ? null : sessionId,
+          goal_id: goalId === "" ? null : goalId,
+          observation_type: observationType,
+          purpose,
+          narrative_text: narrativeText.trim(),
+          status: "draft",
+          observed_at: new Date().toISOString(),
+        })
+        .select("observation_id")
+        .single();
       if (error) throw error;
+
+      const shouldRecordDataPoint =
+        includeDataPoint && goalId !== "" && definitionId !== "" && activeDefinitions.length > 0;
+
+      if (shouldRecordDataPoint) {
+        const parsed = (raw: string): number | null => {
+          const trimmed = raw.trim();
+          if (trimmed === "") return null;
+          const n = Number(trimmed);
+          return Number.isFinite(n) ? n : null;
+        };
+        const { error: dpError } = await supabase.from("data_point").insert({
+          observation_id: inserted.observation_id,
+          case_id: caseId,
+          learner_id: learnerId,
+          goal_id: goalId,
+          measurement_definition_id: definitionId,
+          value_numeric: parsed(valueNumeric),
+          numerator: parsed(numerator),
+          denominator: parsed(denominator),
+          unit,
+          outcome_code: outcomeCode,
+          recorded_at: new Date(recordedAt).toISOString(),
+          source_mode: "manual",
+          validation_status: "draft",
+          recorded_by_team_member_id: teamMemberId,
+        });
+        if (dpError) throw dpError;
+      }
     },
     onSuccess: async () => {
       setNarrativeText("");
       setSessionId("");
       setGoalId("");
+      setIncludeDataPoint(false);
+      setDefinitionId("");
+      setValueNumeric("");
+      setNumerator("");
+      setDenominator("");
+      setRecordedAt(toLocalInputValue(new Date()));
       await queryClient.invalidateQueries({ queryKey: ["observations", caseId] });
     },
   });
+
 
   function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -265,6 +386,172 @@ export function QuickCapturePanel({ caseId, learnerId }: QuickCapturePanelProps)
               )}
             </div>
           </div>
+
+          {selectedSession ? (
+            <p className="rounded-md bg-muted px-3 py-2 text-xs text-muted-foreground">
+              حالة إنجاز الجلسة المرتبطة:{" "}
+              <span className="font-medium text-foreground">
+                {selectedSession.completion_status
+                  ? SESSION_COMPLETION_LABEL_AR[selectedSession.completion_status]
+                  : "غير محددة بعد"}
+              </span>{" "}
+              (للعرض فقط)
+            </p>
+          ) : null}
+
+          {goalId === "" ? null : definitionsQuery.isPending ? (
+            <p className="text-xs text-muted-foreground">جارٍ تحميل مؤشرات القياس المفعّلة…</p>
+          ) : definitionsQuery.error ? (
+            <p className="text-xs text-destructive">تعذر تحميل مؤشرات القياس.</p>
+          ) : activeDefinitions.length === 0 ? (
+            <p className="rounded-md bg-muted px-3 py-2 text-xs text-muted-foreground">
+              لا يوجد مؤشر قياس مفعّل لهذا الهدف، لذا لا يمكن تسجيل نقطة بيانات الآن.
+            </p>
+          ) : (
+            <div className="rounded-lg border border-border p-3">
+              <label className="flex items-center gap-2 text-sm text-card-foreground">
+                <input
+                  type="checkbox"
+                  checked={includeDataPoint}
+                  onChange={(e) => {
+                    setIncludeDataPoint(e.target.checked);
+                    if (e.target.checked && definitionId === "") {
+                      setDefinitionId(activeDefinitions[0]!.measurement_definition_id);
+                    }
+                  }}
+                />
+                تسجيل نقطة بيانات مع هذه الملاحظة
+              </label>
+
+              {includeDataPoint ? (
+                <div className="mt-3 space-y-3">
+                  <div>
+                    <label htmlFor="qc-def" className="mb-1 block text-xs text-muted-foreground">
+                      مؤشر القياس
+                    </label>
+                    <select
+                      id="qc-def"
+                      className={fieldClass}
+                      value={definitionId}
+                      onChange={(e) => setDefinitionId(e.target.value)}
+                    >
+                      {activeDefinitions.map((d) => (
+                        <option key={d.measurement_definition_id} value={d.measurement_definition_id}>
+                          {d.label_ar} ({d.code})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="grid gap-3 md:grid-cols-3">
+                    <div>
+                      <label htmlFor="qc-value" className="mb-1 block text-xs text-muted-foreground">
+                        القيمة الرقمية
+                      </label>
+                      <input
+                        id="qc-value"
+                        type="number"
+                        step="any"
+                        className={fieldClass}
+                        value={valueNumeric}
+                        onChange={(e) => setValueNumeric(e.target.value)}
+                      />
+                    </div>
+                    <div>
+                      <label htmlFor="qc-num" className="mb-1 block text-xs text-muted-foreground">
+                        البسط
+                      </label>
+                      <input
+                        id="qc-num"
+                        type="number"
+                        step="any"
+                        className={fieldClass}
+                        value={numerator}
+                        onChange={(e) => setNumerator(e.target.value)}
+                      />
+                    </div>
+                    <div>
+                      <label htmlFor="qc-den" className="mb-1 block text-xs text-muted-foreground">
+                        المقام
+                      </label>
+                      <input
+                        id="qc-den"
+                        type="number"
+                        step="any"
+                        className={fieldClass}
+                        value={denominator}
+                        onChange={(e) => setDenominator(e.target.value)}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid gap-3 md:grid-cols-3">
+                    <div>
+                      <label htmlFor="qc-unit" className="mb-1 block text-xs text-muted-foreground">
+                        الوحدة
+                      </label>
+                      <select
+                        id="qc-unit"
+                        className={fieldClass}
+                        value={unit}
+                        onChange={(e) => setUnit(e.target.value as DataPointUnit)}
+                      >
+                        {(Object.keys(DATA_POINT_UNIT_LABEL_AR) as DataPointUnit[]).map((k) => (
+                          <option key={k} value={k}>
+                            {DATA_POINT_UNIT_LABEL_AR[k]}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label
+                        htmlFor="qc-outcome"
+                        className="mb-1 block text-xs text-muted-foreground"
+                      >
+                        رمز النتيجة
+                      </label>
+                      <select
+                        id="qc-outcome"
+                        className={fieldClass}
+                        value={outcomeCode}
+                        onChange={(e) => setOutcomeCode(e.target.value as DataPointOutcomeCode)}
+                      >
+                        {(Object.keys(DATA_POINT_OUTCOME_LABEL_AR) as DataPointOutcomeCode[]).map(
+                          (k) => (
+                            <option key={k} value={k}>
+                              {DATA_POINT_OUTCOME_LABEL_AR[k]}
+                            </option>
+                          ),
+                        )}
+                      </select>
+                    </div>
+                    <div>
+                      <label
+                        htmlFor="qc-recorded-at"
+                        className="mb-1 block text-xs text-muted-foreground"
+                      >
+                        وقت التسجيل
+                      </label>
+                      <input
+                        id="qc-recorded-at"
+                        type="datetime-local"
+                        required
+                        className={fieldClass}
+                        value={recordedAt}
+                        onChange={(e) => setRecordedAt(e.target.value)}
+                      />
+                    </div>
+                  </div>
+
+                  <p className="text-xs text-muted-foreground">
+                    تُسجَّل نقطة البيانات دائماً بمصدر «يدوي» وبحالة تحقق «مسودة».
+                  </p>
+                </div>
+              ) : null}
+            </div>
+          )}
+
+
 
           <div className="flex flex-wrap items-center gap-3">
             <button
