@@ -117,9 +117,53 @@ export function GoalsSection({ caseId, learnerId }: GoalsSectionProps) {
     queryFn: loadCurrentTeamMemberId,
   });
 
+  const rolesQuery = useQuery({
+    queryKey: ["case-roles", caseId],
+    queryFn: () => loadCaseRoles(caseId),
+  });
+
   const needs = needsQuery.data ?? [];
   const goals = goalsQuery.data ?? [];
   const teamMemberId = teamMemberQuery.data ?? null;
+  const myRoles = rolesQuery.data ?? [];
+  const canFinalize = myRoles.some((r) => AUTHOR_ROLES.includes(r));
+  const canReview = myRoles.some((r) => REVIEWER_ROLES.includes(r));
+
+  const finalizeGoal = useMutation({
+    mutationFn: async (goalId: string) => {
+      const { error } = await supabase
+        .from("goal")
+        .update({ status: "in_review", updated_at: new Date().toISOString() })
+        .eq("goal_id", goalId)
+        .eq("status", "draft");
+      if (error) throw error;
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ["goals", caseId] });
+    },
+  });
+
+  const decideGoal = useMutation({
+    mutationFn: async ({ goalId, decision }: { goalId: string; decision: "approve" | "reject" }) => {
+      if (!teamMemberId) throw new Error("no_team_member");
+      const now = new Date().toISOString();
+      const { error } = await supabase
+        .from("goal")
+        .update({
+          human_approval_status: decision === "approve" ? "approved" : "rejected",
+          status: decision === "approve" ? "approved" : "draft",
+          approved_by_team_member_id: teamMemberId,
+          approved_at: now,
+          updated_at: now,
+        })
+        .eq("goal_id", goalId)
+        .eq("status", "in_review");
+      if (error) throw error;
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ["goals", caseId] });
+    },
+  });
 
   const createGoal = useMutation({
     mutationFn: async () => {
