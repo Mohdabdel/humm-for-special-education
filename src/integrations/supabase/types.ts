@@ -457,6 +457,182 @@ export type Database = {
           },
         ]
       }
+      observation: {
+        Row: {
+          case_id: string
+          created_at: string
+          goal_id: string | null
+          learner_id: string
+          narrative_text: string | null
+          observation_id: string
+          observation_type: Database["public"]["Enums"]["observation_type"]
+          observed_at: string
+          observer_team_member_id: string
+          purpose: Database["public"]["Enums"]["observation_purpose"]
+          session_id: string | null
+          status: Database["public"]["Enums"]["observation_status"]
+          updated_at: string
+        }
+        Insert: {
+          case_id: string
+          created_at?: string
+          goal_id?: string | null
+          learner_id: string
+          narrative_text?: string | null
+          observation_id?: string
+          observation_type: Database["public"]["Enums"]["observation_type"]
+          observed_at?: string
+          observer_team_member_id: string
+          purpose: Database["public"]["Enums"]["observation_purpose"]
+          session_id?: string | null
+          status?: Database["public"]["Enums"]["observation_status"]
+          updated_at?: string
+        }
+        Update: {
+          case_id?: string
+          created_at?: string
+          goal_id?: string | null
+          learner_id?: string
+          narrative_text?: string | null
+          observation_id?: string
+          observation_type?: Database["public"]["Enums"]["observation_type"]
+          observed_at?: string
+          observer_team_member_id?: string
+          purpose?: Database["public"]["Enums"]["observation_purpose"]
+          session_id?: string | null
+          status?: Database["public"]["Enums"]["observation_status"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "observation_case_id_case_case_id_fk"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "case"
+            referencedColumns: ["case_id"]
+          },
+          {
+            foreignKeyName: "observation_goal_id_goal_goal_id_fk"
+            columns: ["goal_id"]
+            isOneToOne: false
+            referencedRelation: "goal"
+            referencedColumns: ["goal_id"]
+          },
+          {
+            foreignKeyName: "observation_learner_id_learner_learner_id_fk"
+            columns: ["learner_id"]
+            isOneToOne: false
+            referencedRelation: "learner"
+            referencedColumns: ["learner_id"]
+          },
+          {
+            foreignKeyName: "observation_observer_team_member_id_team_member_team_member_id_"
+            columns: ["observer_team_member_id"]
+            isOneToOne: false
+            referencedRelation: "team_member"
+            referencedColumns: ["team_member_id"]
+          },
+          {
+            foreignKeyName: "observation_session_id_session_session_id_fk"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "session"
+            referencedColumns: ["session_id"]
+          },
+        ]
+      }
+      session: {
+        Row: {
+          actual_end_at: string | null
+          actual_start_at: string | null
+          brief_note: string | null
+          case_id: string
+          completion_status:
+            | Database["public"]["Enums"]["session_completion_status"]
+            | null
+          created_at: string
+          delivered_by_team_member_id: string
+          goal_id: string | null
+          learner_id: string
+          plan_id: string | null
+          scheduled_end_at: string | null
+          scheduled_start_at: string | null
+          session_id: string
+          session_type: Database["public"]["Enums"]["session_type"]
+          status: Database["public"]["Enums"]["session_status"]
+          updated_at: string
+        }
+        Insert: {
+          actual_end_at?: string | null
+          actual_start_at?: string | null
+          brief_note?: string | null
+          case_id: string
+          completion_status?:
+            | Database["public"]["Enums"]["session_completion_status"]
+            | null
+          created_at?: string
+          delivered_by_team_member_id: string
+          goal_id?: string | null
+          learner_id: string
+          plan_id?: string | null
+          scheduled_end_at?: string | null
+          scheduled_start_at?: string | null
+          session_id?: string
+          session_type: Database["public"]["Enums"]["session_type"]
+          status?: Database["public"]["Enums"]["session_status"]
+          updated_at?: string
+        }
+        Update: {
+          actual_end_at?: string | null
+          actual_start_at?: string | null
+          brief_note?: string | null
+          case_id?: string
+          completion_status?:
+            | Database["public"]["Enums"]["session_completion_status"]
+            | null
+          created_at?: string
+          delivered_by_team_member_id?: string
+          goal_id?: string | null
+          learner_id?: string
+          plan_id?: string | null
+          scheduled_end_at?: string | null
+          scheduled_start_at?: string | null
+          session_id?: string
+          session_type?: Database["public"]["Enums"]["session_type"]
+          status?: Database["public"]["Enums"]["session_status"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "session_case_id_case_case_id_fk"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "case"
+            referencedColumns: ["case_id"]
+          },
+          {
+            foreignKeyName: "session_delivered_by_team_member_id_team_member_team_member_id_"
+            columns: ["delivered_by_team_member_id"]
+            isOneToOne: false
+            referencedRelation: "team_member"
+            referencedColumns: ["team_member_id"]
+          },
+          {
+            foreignKeyName: "session_goal_id_goal_goal_id_fk"
+            columns: ["goal_id"]
+            isOneToOne: false
+            referencedRelation: "goal"
+            referencedColumns: ["goal_id"]
+          },
+          {
+            foreignKeyName: "session_learner_id_learner_learner_id_fk"
+            columns: ["learner_id"]
+            isOneToOne: false
+            referencedRelation: "learner"
+            referencedColumns: ["learner_id"]
+          },
+        ]
+      }
       team_member: {
         Row: {
           created_at: string
@@ -587,6 +763,41 @@ export type Database = {
         | "transition"
         | "safety"
         | "assessment_gap"
+      observation_purpose:
+        | "baseline"
+        | "progress"
+        | "incident"
+        | "generalization"
+        | "quality_check"
+        | "follow_up"
+      observation_status: "draft" | "reviewed" | "approved" | "superseded"
+      observation_type:
+        | "structured"
+        | "narrative"
+        | "ABC"
+        | "functional"
+        | "classroom"
+        | "family_report"
+        | "learner_report"
+        | "task_performance"
+      session_completion_status: "complete" | "partial" | "not_completed"
+      session_status:
+        | "scheduled"
+        | "in_progress"
+        | "completed"
+        | "missed"
+        | "cancelled"
+        | "documented"
+      session_type:
+        | "special_education"
+        | "therapy"
+        | "behavior_support"
+        | "vocational_training"
+        | "functional_activity"
+        | "classroom_support"
+        | "community_based"
+        | "family_coaching"
+        | "meeting"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -820,6 +1031,45 @@ export const Constants = {
         "transition",
         "safety",
         "assessment_gap",
+      ],
+      observation_purpose: [
+        "baseline",
+        "progress",
+        "incident",
+        "generalization",
+        "quality_check",
+        "follow_up",
+      ],
+      observation_status: ["draft", "reviewed", "approved", "superseded"],
+      observation_type: [
+        "structured",
+        "narrative",
+        "ABC",
+        "functional",
+        "classroom",
+        "family_report",
+        "learner_report",
+        "task_performance",
+      ],
+      session_completion_status: ["complete", "partial", "not_completed"],
+      session_status: [
+        "scheduled",
+        "in_progress",
+        "completed",
+        "missed",
+        "cancelled",
+        "documented",
+      ],
+      session_type: [
+        "special_education",
+        "therapy",
+        "behavior_support",
+        "vocational_training",
+        "functional_activity",
+        "classroom_support",
+        "community_based",
+        "family_coaching",
+        "meeting",
       ],
     },
   },
