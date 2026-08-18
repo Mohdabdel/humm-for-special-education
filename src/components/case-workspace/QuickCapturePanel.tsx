@@ -75,13 +75,18 @@ async function loadCurrentTeamMemberId(): Promise<string | null> {
   return data?.[0]?.team_member_id ?? null;
 }
 
-async function loadTodaysSessionOptions(
-  caseId: string,
-): Promise<Array<{ session_id: string; scheduled_start_at: string | null; session_type: string }>> {
+interface SessionOption {
+  session_id: string;
+  scheduled_start_at: string | null;
+  session_type: string;
+  completion_status: SessionCompletionStatus | null;
+}
+
+async function loadTodaysSessionOptions(caseId: string): Promise<SessionOption[]> {
   const { startIso, endIso } = getTodayRange();
   const { data, error } = await supabase
     .from("session")
-    .select("session_id, scheduled_start_at, session_type")
+    .select("session_id, scheduled_start_at, session_type, completion_status")
     .eq("case_id", caseId)
     .gte("scheduled_start_at", startIso)
     .lt("scheduled_start_at", endIso)
@@ -89,6 +94,34 @@ async function loadTodaysSessionOptions(
   if (error) throw error;
   return data ?? [];
 }
+
+interface ActiveDefinitionOption {
+  measurement_definition_id: string;
+  code: string;
+  label_ar: string;
+  unit: string;
+  numerator_label: string | null;
+  denominator_label: string | null;
+}
+
+async function loadActiveDefinitions(goalId: string): Promise<ActiveDefinitionOption[]> {
+  const { data, error } = await supabase
+    .from("measurement_definition")
+    .select("measurement_definition_id, code, label_ar, unit, numerator_label, denominator_label")
+    .eq("goal_id", goalId)
+    .eq("status", "active")
+    .order("created_at", { ascending: true });
+  if (error) throw error;
+  return data ?? [];
+}
+
+function toLocalInputValue(date: Date): string {
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(
+    date.getHours(),
+  )}:${pad(date.getMinutes())}`;
+}
+
 
 async function loadGoalOptions(
   caseId: string,
