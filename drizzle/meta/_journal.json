@@ -22,6 +22,27 @@
       "when": 1787005060236,
       "tag": "0002_blushing_donald_blake",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1787005061000,
+      "tag": "0003_two_gate_approval",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1787005062000,
+      "tag": "0004_enable_rls_on_learner_team_member",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1787005063000,
+      "tag": "0005_daily_practice_step1",
+      "breakpoints": true
     }
   ]
 }
