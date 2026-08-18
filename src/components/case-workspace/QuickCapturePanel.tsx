@@ -5,6 +5,35 @@ import type { Database } from "@/integrations/supabase/types";
 
 type ObservationType = Database["public"]["Enums"]["observation_type"];
 type ObservationPurpose = Database["public"]["Enums"]["observation_purpose"];
+type DataPointUnit = Database["public"]["Enums"]["data_point_unit"];
+type DataPointOutcomeCode = Database["public"]["Enums"]["data_point_outcome_code"];
+type SessionCompletionStatus = Database["public"]["Enums"]["session_completion_status"];
+
+const DATA_POINT_UNIT_LABEL_AR: Record<DataPointUnit, string> = {
+  percent: "نسبة مئوية",
+  count: "عدد",
+  duration_seconds: "مدة (ثوانٍ)",
+  duration_minutes: "مدة (دقائق)",
+  latency_seconds: "زمن الاستجابة (ثوانٍ)",
+  rate: "معدل",
+  rubric_score: "درجة روبرك",
+  prompt_level: "مستوى التلميح",
+  productivity_rate: "معدل الإنتاجية",
+};
+
+const DATA_POINT_OUTCOME_LABEL_AR: Record<DataPointOutcomeCode, string> = {
+  success: "ناجح",
+  partial: "جزئي",
+  unsuccessful: "غير ناجح",
+  not_applicable: "غير منطبق",
+};
+
+const SESSION_COMPLETION_LABEL_AR: Record<SessionCompletionStatus, string> = {
+  complete: "مكتملة",
+  partial: "جزئية",
+  not_completed: "غير مكتملة",
+};
+
 
 const OBSERVATION_TYPE_LABEL_AR: Record<ObservationType, string> = {
   structured: "منظَّمة",
