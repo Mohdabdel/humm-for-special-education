@@ -216,7 +216,8 @@ function CaseWorkspacePage() {
               (اسم المتعلم غير متاح حالياً — يُعرض المعرّف كبديل لعدم توسيع صلاحيات الوصول)
             </p>
           </div>
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap items-center gap-2">
+            <LogoutButton />
             <span
               className={`rounded-full px-3 py-1 text-sm font-medium ${statusClasses(c.status)}`}
             >
