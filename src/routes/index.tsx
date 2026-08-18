@@ -298,6 +298,8 @@ function CaseWorkspacePage() {
 
       <MeasurementDefinitionsSection caseId={c.case_id} />
 
+      <ProgressHistorySection caseId={c.case_id} />
+
       <TodaysSessionsSection
         caseId={c.case_id}
         selectedSessionId={selectedSessionId}
