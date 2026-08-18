@@ -197,46 +197,48 @@ export function MeasurementDefinitionsSection({ caseId }: MeasurementDefinitions
             ) : (definitionsQuery.data ?? []).length === 0 ? (
               <p className="text-xs text-muted-foreground">لا توجد تعريفات قياس لهذا الهدف.</p>
             ) : (
-              <ul className="space-y-2">
-                {(definitionsQuery.data ?? []).map((d) => (
-                  <li
-                    key={d.measurement_definition_id}
-                    className="rounded-md border border-border p-3 text-xs text-muted-foreground"
-                  >
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="flex-1">
-                        <p className="text-sm font-medium text-card-foreground">
-                          {d.label_ar} <span className="text-xs text-muted-foreground">({d.code})</span>
-                        </p>
-                        <p className="mt-1">
-                          النوع: {MEASUREMENT_TYPE_LABEL_AR[d.measurement_type]} · الوحدة: {d.unit} ·
-                          الحالة: {d.status === "draft" ? "مسودة" : "مفعّل"}
-                        </p>
-                        <p>المعيار المستهدف: {d.target_criterion}</p>
-                        <p>وتيرة الجمع: {d.collection_cadence}</p>
-                        <p>
-                          تتبع مستوى المساعدة: {d.support_tracking_required ? "مطلوب" : "غير مطلوب"}
-                        </p>
+              <>
+                <ul className="space-y-2">
+                  {(definitionsQuery.data ?? []).map((d) => (
+                    <li
+                      key={d.measurement_definition_id}
+                      className="rounded-md border border-border p-3 text-xs text-muted-foreground"
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex-1">
+                          <p className="text-sm font-medium text-card-foreground">
+                            {d.label_ar} <span className="text-xs text-muted-foreground">({d.code})</span>
+                          </p>
+                          <p className="mt-1">
+                            النوع: {MEASUREMENT_TYPE_LABEL_AR[d.measurement_type]} · الوحدة: {d.unit} ·
+                            الحالة: {d.status === "draft" ? "مسودة" : "مفعّل"}
+                          </p>
+                          <p>المعيار المستهدف: {d.target_criterion}</p>
+                          <p>وتيرة الجمع: {d.collection_cadence}</p>
+                          <p>
+                            تتبع مستوى المساعدة: {d.support_tracking_required ? "مطلوب" : "غير مطلوب"}
+                          </p>
+                        </div>
+                        {d.status === "draft" ? (
+                          <button
+                            type="button"
+                            disabled={activateDefinition.isPending}
+                            onClick={() => activateDefinition.mutate(d.measurement_definition_id)}
+                            className="shrink-0 rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground disabled:opacity-60"
+                          >
+                            {activateDefinition.isPending ? "جارٍ التفعيل…" : "تفعيل"}
+                          </button>
+                        ) : null}
                       </div>
-                      {d.status === "draft" ? (
-                        <button
-                          type="button"
-                          disabled={activateDefinition.isPending}
-                          onClick={() => activateDefinition.mutate(d.measurement_definition_id)}
-                          className="shrink-0 rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground disabled:opacity-60"
-                        >
-                          {activateDefinition.isPending ? "جارٍ التفعيل…" : "تفعيل"}
-                        </button>
-                      ) : null}
-                    </div>
-                  </li>
-                ))}
-              </ul>
-              {activateDefinition.error ? (
-                <p className="text-xs text-destructive">
-                  تعذر تفعيل تعريف القياس وفق سياسات الوصول.
-                </p>
-              ) : null}
+                    </li>
+                  ))}
+                </ul>
+                {activateDefinition.error ? (
+                  <p className="text-xs text-destructive">
+                    تعذر تفعيل تعريف القياس وفق سياسات الوصول.
+                  </p>
+                ) : null}
+              </>
             )}
           </div>
 
