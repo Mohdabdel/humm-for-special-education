@@ -61,6 +61,21 @@ async function loadNeeds(caseId: string): Promise<NeedRow[]> {
   return data ?? [];
 }
 
+type MembershipRole = Database["public"]["Enums"]["case_membership_role"];
+
+const AUTHOR_ROLES: MembershipRole[] = ["special_educator", "therapist"];
+const REVIEWER_ROLES: MembershipRole[] = ["supervisor", "case_manager"];
+
+async function loadCaseRoles(caseId: string): Promise<MembershipRole[]> {
+  const { data, error } = await supabase
+    .from("case_membership")
+    .select("role")
+    .eq("case_id", caseId)
+    .is("ended_at", null);
+  if (error) throw error;
+  return (data ?? []).map((r) => r.role);
+}
+
 async function loadCurrentTeamMemberId(): Promise<string | null> {
   const { data: userData } = await supabase.auth.getUser();
   const userId = userData.user?.id;
