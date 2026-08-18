@@ -130,6 +130,22 @@ export function MeasurementDefinitionsSection({ caseId }: MeasurementDefinitions
     },
   });
 
+  const activateDefinition = useMutation({
+    mutationFn: async (measurementDefinitionId: string) => {
+      const { error } = await supabase
+        .from("measurement_definition")
+        .update({ status: "active" })
+        .eq("measurement_definition_id", measurementDefinitionId)
+        .eq("status", "draft");
+      if (error) throw error;
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
+        queryKey: ["measurement-definitions", activeGoal?.goalId ?? "none"],
+      });
+    },
+  });
+
   function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     createDefinition.mutate();
@@ -187,21 +203,40 @@ export function MeasurementDefinitionsSection({ caseId }: MeasurementDefinitions
                     key={d.measurement_definition_id}
                     className="rounded-md border border-border p-3 text-xs text-muted-foreground"
                   >
-                    <p className="text-sm font-medium text-card-foreground">
-                      {d.label_ar} <span className="text-xs text-muted-foreground">({d.code})</span>
-                    </p>
-                    <p className="mt-1">
-                      النوع: {MEASUREMENT_TYPE_LABEL_AR[d.measurement_type]} · الوحدة: {d.unit} ·
-                      الحالة: {d.status === "draft" ? "مسودة" : "مفعّل"}
-                    </p>
-                    <p>المعيار المستهدف: {d.target_criterion}</p>
-                    <p>وتيرة الجمع: {d.collection_cadence}</p>
-                    <p>
-                      تتبع مستوى المساعدة: {d.support_tracking_required ? "مطلوب" : "غير مطلوب"}
-                    </p>
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex-1">
+                        <p className="text-sm font-medium text-card-foreground">
+                          {d.label_ar} <span className="text-xs text-muted-foreground">({d.code})</span>
+                        </p>
+                        <p className="mt-1">
+                          النوع: {MEASUREMENT_TYPE_LABEL_AR[d.measurement_type]} · الوحدة: {d.unit} ·
+                          الحالة: {d.status === "draft" ? "مسودة" : "مفعّل"}
+                        </p>
+                        <p>المعيار المستهدف: {d.target_criterion}</p>
+                        <p>وتيرة الجمع: {d.collection_cadence}</p>
+                        <p>
+                          تتبع مستوى المساعدة: {d.support_tracking_required ? "مطلوب" : "غير مطلوب"}
+                        </p>
+                      </div>
+                      {d.status === "draft" ? (
+                        <button
+                          type="button"
+                          disabled={activateDefinition.isPending}
+                          onClick={() => activateDefinition.mutate(d.measurement_definition_id)}
+                          className="shrink-0 rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground disabled:opacity-60"
+                        >
+                          {activateDefinition.isPending ? "جارٍ التفعيل…" : "تفعيل"}
+                        </button>
+                      ) : null}
+                    </div>
                   </li>
                 ))}
               </ul>
+              {activateDefinition.error ? (
+                <p className="text-xs text-destructive">
+                  تعذر تفعيل تعريف القياس وفق سياسات الوصول.
+                </p>
+              ) : null}
             )}
           </div>
 
