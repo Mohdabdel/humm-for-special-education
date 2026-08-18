@@ -63,15 +63,22 @@ async function loadTodaysSessions(caseId: string): Promise<SessionRow[]> {
 
 interface TodaysSessionsSectionProps {
   caseId: string;
+  selectedSessionId?: string | null;
+  onSelectSession?: (sessionId: string) => void;
 }
 
-export function TodaysSessionsSection({ caseId }: TodaysSessionsSectionProps) {
+export function TodaysSessionsSection({
+  caseId,
+  selectedSessionId,
+  onSelectSession,
+}: TodaysSessionsSectionProps) {
   const { data, isPending, error } = useQuery({
     queryKey: ["todays-sessions", caseId],
     queryFn: () => loadTodaysSessions(caseId),
   });
 
   const sessions = data ?? [];
+
 
   return (
     <section className="rounded-xl border border-border bg-card p-5 shadow-sm">
