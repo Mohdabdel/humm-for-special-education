@@ -58,4 +58,33 @@ CREATE INDEX "session_case_id_idx" ON "session" USING btree ("case_id");--> stat
 CREATE INDEX "session_learner_id_idx" ON "session" USING btree ("learner_id");--> statement-breakpoint
 CREATE INDEX "session_status_idx" ON "session" USING btree ("status");--> statement-breakpoint
 CREATE INDEX "session_goal_id_idx" ON "session" USING btree ("goal_id");--> statement-breakpoint
-CREATE INDEX "session_delivered_by_team_member_id_idx" ON "session" USING btree ("delivered_by_team_member_id");
+CREATE INDEX "session_delivered_by_team_member_id_idx" ON "session" USING btree ("delivered_by_team_member_id");--> statement-breakpoint
+-- ============================================================
+-- RLS for Daily Practice Workspace (session, observation)
+-- Access rule: the authenticated user must hold an active
+-- case_membership on the owning case, linked via team_member.user_id.
+-- Reuses public.has_case_access(case_id) defined in migration 0002.
+-- ============================================================
+GRANT SELECT, INSERT, UPDATE ON public.session TO authenticated;
+GRANT SELECT, INSERT, UPDATE ON public.observation TO authenticated;
+GRANT ALL ON public.session TO service_role;
+GRANT ALL ON public.observation TO service_role;
+
+ALTER TABLE public.session ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.observation ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "session_select_case_members" ON public.session
+  FOR SELECT TO authenticated USING (public.has_case_access(case_id));
+CREATE POLICY "session_insert_case_members" ON public.session
+  FOR INSERT TO authenticated WITH CHECK (public.has_case_access(case_id));
+CREATE POLICY "session_update_case_members" ON public.session
+  FOR UPDATE TO authenticated USING (public.has_case_access(case_id))
+  WITH CHECK (public.has_case_access(case_id));
+
+CREATE POLICY "observation_select_case_members" ON public.observation
+  FOR SELECT TO authenticated USING (public.has_case_access(case_id));
+CREATE POLICY "observation_insert_case_members" ON public.observation
+  FOR INSERT TO authenticated WITH CHECK (public.has_case_access(case_id));
+CREATE POLICY "observation_update_case_members" ON public.observation
+  FOR UPDATE TO authenticated USING (public.has_case_access(case_id))
+  WITH CHECK (public.has_case_access(case_id));
