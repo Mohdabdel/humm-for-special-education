@@ -295,6 +295,8 @@ function CaseWorkspacePage() {
 
       <QuickCapturePanel caseId={c.case_id} learnerId={c.learner_id} />
 
+      <SessionCreationPanel caseId={c.case_id} learnerId={c.learner_id} />
+
       <Section title="الخط الزمني المختصر">
 
         <ol className="space-y-3 border-r border-border pr-4">
