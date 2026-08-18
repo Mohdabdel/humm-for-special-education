@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { NeedsSection } from "@/components/case-workspace/NeedsSection";
@@ -108,10 +108,65 @@ function Section({ title, children }: { title: string; children: React.ReactNode
   );
 }
 
+// TEMP DEBUG: remove after auth/RLS diagnosis
+const EXPECTED_DEBUG_USER_ID = "4c1d72d9-45a6-4255-9da1-c8109a35d6b7";
+
+function TempDebugSessionPanel() {
+  const [sessionInfo, setSessionInfo] = useState<
+    | { kind: "loading" }
+    | { kind: "ready"; active: boolean; userId: string | null; matches: boolean }
+  >({ kind: "loading" });
+
+  useEffect(() => {
+    let cancelled = false;
+    supabase.auth.getSession().then(({ data }) => {
+      if (cancelled) return;
+      const userId = data.session?.user?.id ?? null;
+      setSessionInfo({
+        kind: "ready",
+        active: !!data.session,
+        userId,
+        matches: userId === EXPECTED_DEBUG_USER_ID,
+      });
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  if (sessionInfo.kind === "loading") {
+    return (
+      <div className="rounded-md border-2 border-dashed border-destructive bg-destructive/10 p-4 text-sm text-destructive">
+        TEMP DEBUG: جارٍ فحص الجلسة…
+      </div>
+    );
+  }
+
+  return (
+    <div className="rounded-md border-2 border-dashed border-destructive bg-destructive/10 p-4 text-sm text-destructive">
+      <p className="font-bold">TEMP DEBUG: فحص الجلسة (يُزال بعد التشخيص)</p>
+      <ul className="mt-2 space-y-1">
+        <li>هل توجد جلسة نشطة؟ {sessionInfo.active ? "نعم" : "لا"}</li>
+        {sessionInfo.active && <li>معرّف المستخدم في الجلسة: {sessionInfo.userId ?? "—"}</li>}
+        {sessionInfo.active && (
+          <li>
+            هل المعرّف مطابق للمستخدم المتوقع؟{" "}
+            {sessionInfo.matches ? "نعم" : "لا"}
+          </li>
+        )}
+      </ul>
+    </div>
+  );
+}
+
 function Shell({ children }: { children: React.ReactNode }) {
   return (
     <main dir="rtl" className="min-h-screen bg-background px-4 py-8 md:px-8">
-      <div className="mx-auto max-w-5xl space-y-6">{children}</div>
+      <div className="mx-auto max-w-5xl space-y-6">
+        {/* TEMP DEBUG: remove after auth/RLS diagnosis */}
+        <TempDebugSessionPanel />
+        {children}
+      </div>
     </main>
   );
 }
