@@ -43,9 +43,14 @@ FOR EACH ROW
 EXECUTE FUNCTION public.enforce_measurement_plan_requires_approved_goal();
 
 --------------------------------------------------------------------------------
--- Gate A: draft -> in_review only by the owning team member.
--- Gate B: approval/rejection only while OLD.status = 'in_review', and only for a
--- case_membership role of supervisor or case_manager.
+-- Two-gate approval model.
+-- GATE A: draft -> in_review, only by the goal owner, and only when that owner
+--         has an active case_membership role of special_educator or therapist.
+-- GATE B: approval/rejection only while OLD.status = 'in_review', only by the
+--         acting user themselves, and only with an active case_membership role
+--         of supervisor or case_manager. MVP outcomes only:
+--         approved  -> human_approval_status='approved',  status='approved'
+--         rejected  -> human_approval_status='rejected',  status='draft'
 --------------------------------------------------------------------------------
 CREATE OR REPLACE FUNCTION public.enforce_goal_approval_gates()
 RETURNS trigger
@@ -55,8 +60,10 @@ SET search_path = public
 AS $$
 DECLARE
   v_approval_changed boolean;
-  v_is_reviewer boolean;
-  v_is_owner boolean;
+  v_actor_team_member_id uuid;
+  v_owner_is_actor boolean;
+  v_owner_has_author_role boolean;
+  v_actor_is_reviewer boolean;
 BEGIN
   v_approval_changed :=
        NEW.human_approval_status IS DISTINCT FROM OLD.human_approval_status
@@ -64,28 +71,45 @@ BEGIN
     OR NEW.approved_at IS DISTINCT FROM OLD.approved_at
     OR (OLD.status <> NEW.status AND NEW.status IN ('approved', 'active'));
 
-  -- GATE A
+  ------------------------------------------------------------------ GATE A
   IF OLD.status = 'draft' AND NEW.status = 'in_review' THEN
     IF v_approval_changed THEN
       RAISE EXCEPTION 'goal gate A: finalize-for-review must not change approval fields'
         USING ERRCODE = 'check_violation';
     END IF;
 
+    -- the acting user must be the goal owner
     SELECT EXISTS (
       SELECT 1 FROM public.team_member tm
       WHERE tm.team_member_id = OLD.owner_team_member_id
         AND tm.user_id = auth.uid()
-    ) INTO v_is_owner;
+    ) INTO v_owner_is_actor;
 
-    IF NOT v_is_owner THEN
+    IF NOT v_owner_is_actor THEN
       RAISE EXCEPTION 'goal gate A: only the goal owner may finalize it for review'
+        USING ERRCODE = 'insufficient_privilege';
+    END IF;
+
+    -- and that owner must hold an active authoring role on this case
+    SELECT EXISTS (
+      SELECT 1
+      FROM public.case_membership cm
+      WHERE cm.case_id = OLD.case_id
+        AND cm.team_member_id = OLD.owner_team_member_id
+        AND cm.ended_at IS NULL
+        AND cm.role IN ('special_educator', 'therapist')
+    ) INTO v_owner_has_author_role;
+
+    IF NOT v_owner_has_author_role THEN
+      RAISE EXCEPTION
+        'goal gate A: goal owner must have an active special_educator or therapist membership on this case'
         USING ERRCODE = 'insufficient_privilege';
     END IF;
 
     RETURN NEW;
   END IF;
 
-  -- GATE B
+  ------------------------------------------------------------------ GATE B
   IF v_approval_changed THEN
     IF OLD.status <> 'in_review' THEN
       RAISE EXCEPTION
@@ -94,13 +118,13 @@ BEGIN
         USING ERRCODE = 'check_violation';
     END IF;
 
-    IF NEW.human_approval_status NOT IN ('approved', 'approved_with_conditions', 'rejected') THEN
-      RAISE EXCEPTION 'goal gate B: invalid target approval status %', NEW.human_approval_status
+    IF NEW.human_approval_status NOT IN ('approved', 'rejected') THEN
+      RAISE EXCEPTION 'goal gate B: invalid target approval status % (MVP allows approved or rejected only)',
+        NEW.human_approval_status
         USING ERRCODE = 'check_violation';
     END IF;
 
-    IF NEW.human_approval_status IN ('approved', 'approved_with_conditions')
-       AND NEW.status <> 'approved' THEN
+    IF NEW.human_approval_status = 'approved' AND NEW.status <> 'approved' THEN
       RAISE EXCEPTION 'goal gate B: approved goal must move to status approved'
         USING ERRCODE = 'check_violation';
     END IF;
@@ -110,24 +134,42 @@ BEGIN
         USING ERRCODE = 'check_violation';
     END IF;
 
-    SELECT EXISTS (
-      SELECT 1
-      FROM public.case_membership cm
-      JOIN public.team_member tm ON tm.team_member_id = cm.team_member_id
-      WHERE cm.case_id = OLD.case_id
-        AND cm.ended_at IS NULL
-        AND cm.role IN ('supervisor', 'case_manager')
-        AND tm.user_id = auth.uid()
-    ) INTO v_is_reviewer;
-
-    IF NOT v_is_reviewer THEN
-      RAISE EXCEPTION 'goal gate B: only supervisor or case_manager may approve or reject'
-        USING ERRCODE = 'insufficient_privilege';
-    END IF;
-
     IF NEW.approved_by_team_member_id IS NULL OR NEW.approved_at IS NULL THEN
       RAISE EXCEPTION 'goal gate B: approved_by_team_member_id and approved_at are required'
         USING ERRCODE = 'check_violation';
+    END IF;
+
+    -- resolve the acting user's own team_member row
+    SELECT tm.team_member_id
+      INTO v_actor_team_member_id
+      FROM public.team_member tm
+     WHERE tm.user_id = auth.uid()
+     LIMIT 1;
+
+    IF v_actor_team_member_id IS NULL THEN
+      RAISE EXCEPTION 'goal gate B: acting user is not linked to a team member'
+        USING ERRCODE = 'insufficient_privilege';
+    END IF;
+
+    -- approver must be the acting user themselves
+    IF NEW.approved_by_team_member_id <> v_actor_team_member_id THEN
+      RAISE EXCEPTION 'goal gate B: approved_by_team_member_id must be the acting team member'
+        USING ERRCODE = 'insufficient_privilege';
+    END IF;
+
+    -- and that team member must hold an active reviewer role on this case
+    SELECT EXISTS (
+      SELECT 1
+      FROM public.case_membership cm
+      WHERE cm.case_id = OLD.case_id
+        AND cm.team_member_id = v_actor_team_member_id
+        AND cm.ended_at IS NULL
+        AND cm.role IN ('supervisor', 'case_manager')
+    ) INTO v_actor_is_reviewer;
+
+    IF NOT v_actor_is_reviewer THEN
+      RAISE EXCEPTION 'goal gate B: only supervisor or case_manager may approve or reject'
+        USING ERRCODE = 'insufficient_privilege';
     END IF;
 
     RETURN NEW;
