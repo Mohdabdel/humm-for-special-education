@@ -8,4 +8,6 @@
 export * from "./schema/case_mgmt/schema";
 export * from "./schema/planning/schema";
 export * from "./schema/execution/schema";
+export * from "./schema/progress/schema";
+
 
