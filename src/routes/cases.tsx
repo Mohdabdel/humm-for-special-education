@@ -124,9 +124,14 @@ function CaseListPage() {
             لا توجد جلسة مستخدم حالية. قائمة الحالات محمية بسياسات صفوف (RLS) ولا يمكن عرضها دون
             مستخدم مسجّل الدخول.
           </p>
-          <p className="mt-2 text-xs text-muted-foreground">
-            تسجيل الدخول غير مُنفَّذ بعد ضمن نطاق هذه المرحلة.
-          </p>
+          <div className="mt-6">
+            <Link
+              to="/login"
+              className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+            >
+              الانتقال إلى تسجيل الدخول
+            </Link>
+          </div>
         </div>
       </Shell>
     );
