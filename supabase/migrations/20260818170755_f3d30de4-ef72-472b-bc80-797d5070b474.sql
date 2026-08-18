@@ -1,0 +1,2 @@
+REVOKE ALL ON FUNCTION public.enforce_measurement_plan_requires_approved_goal() FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION public.enforce_goal_approval_gates() FROM PUBLIC, anon, authenticated;

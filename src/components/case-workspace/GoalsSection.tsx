@@ -1,6 +1,8 @@
 import { useState, type FormEvent } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { MeasurementPlanPanel } from "@/components/case-workspace/MeasurementPlanPanel";
+
 import type { Database } from "@/integrations/supabase/types";
 
 type GoalRow = Database["public"]["Tables"]["goal"]["Row"];
@@ -286,7 +288,12 @@ export function GoalsSection({ caseId, learnerId }: GoalsSectionProps) {
                   </button>
                 </span>
               ) : null}
+
+              {g.human_approval_status === "approved" ? (
+                <MeasurementPlanPanel goalId={g.goal_id} />
+              ) : null}
             </li>
+
           ))}
         </ul>
       )}
