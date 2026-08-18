@@ -7,6 +7,7 @@ import { GoalsSection } from "@/components/case-workspace/GoalsSection";
 import { TodaysSessionsSection } from "@/components/case-workspace/TodaysSessionsSection";
 import { SessionCard } from "@/components/case-workspace/SessionCard";
 import { QuickCapturePanel } from "@/components/case-workspace/QuickCapturePanel";
+import { SessionCreationPanel } from "@/components/case-workspace/SessionCreationPanel";
 import type { Database } from "@/integrations/supabase/types";
 
 
