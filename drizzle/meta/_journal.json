@@ -22,6 +22,13 @@
       "when": 1787005060236,
       "tag": "0002_blushing_donald_blake",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1787076271384,
+      "tag": "_0005_daily_practice_step1",
+      "breakpoints": true
     }
   ]
 }
