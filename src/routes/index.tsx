@@ -1,10 +1,13 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { NeedsSection } from "@/components/case-workspace/NeedsSection";
 import { GoalsSection } from "@/components/case-workspace/GoalsSection";
 import { TodaysSessionsSection } from "@/components/case-workspace/TodaysSessionsSection";
+import { SessionCard } from "@/components/case-workspace/SessionCard";
 import type { Database } from "@/integrations/supabase/types";
+
 
 type CaseRow = Database["public"]["Tables"]["case"]["Row"];
 type CaseStatus = Database["public"]["Enums"]["case_status"];
