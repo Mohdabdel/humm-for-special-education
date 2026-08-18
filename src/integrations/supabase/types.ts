@@ -666,6 +666,14 @@ export type Database = {
     }
     Functions: {
       has_case_access: { Args: { _case_id: string }; Returns: boolean }
+      is_own_team_member: {
+        Args: { _team_member_id: string }
+        Returns: boolean
+      }
+      shares_active_case_with_current_user: {
+        Args: { _team_member_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
       case_confidentiality_level:
