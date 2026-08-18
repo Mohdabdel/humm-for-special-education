@@ -155,6 +155,106 @@ export type Database = {
           },
         ]
       }
+      data_point: {
+        Row: {
+          case_id: string
+          created_at: string
+          data_point_id: string
+          denominator: number | null
+          goal_id: string
+          learner_id: string
+          measurement_definition_id: string
+          numerator: number | null
+          observation_id: string
+          outcome_code: Database["public"]["Enums"]["data_point_outcome_code"]
+          recorded_at: string
+          recorded_by_team_member_id: string
+          source_mode: Database["public"]["Enums"]["data_point_source_mode"]
+          unit: Database["public"]["Enums"]["data_point_unit"]
+          validation_status: Database["public"]["Enums"]["data_point_validation_status"]
+          value_numeric: number | null
+        }
+        Insert: {
+          case_id: string
+          created_at?: string
+          data_point_id?: string
+          denominator?: number | null
+          goal_id: string
+          learner_id: string
+          measurement_definition_id: string
+          numerator?: number | null
+          observation_id: string
+          outcome_code: Database["public"]["Enums"]["data_point_outcome_code"]
+          recorded_at: string
+          recorded_by_team_member_id: string
+          source_mode?: Database["public"]["Enums"]["data_point_source_mode"]
+          unit: Database["public"]["Enums"]["data_point_unit"]
+          validation_status?: Database["public"]["Enums"]["data_point_validation_status"]
+          value_numeric?: number | null
+        }
+        Update: {
+          case_id?: string
+          created_at?: string
+          data_point_id?: string
+          denominator?: number | null
+          goal_id?: string
+          learner_id?: string
+          measurement_definition_id?: string
+          numerator?: number | null
+          observation_id?: string
+          outcome_code?: Database["public"]["Enums"]["data_point_outcome_code"]
+          recorded_at?: string
+          recorded_by_team_member_id?: string
+          source_mode?: Database["public"]["Enums"]["data_point_source_mode"]
+          unit?: Database["public"]["Enums"]["data_point_unit"]
+          validation_status?: Database["public"]["Enums"]["data_point_validation_status"]
+          value_numeric?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "data_point_case_id_fk"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "case"
+            referencedColumns: ["case_id"]
+          },
+          {
+            foreignKeyName: "data_point_goal_id_fk"
+            columns: ["goal_id"]
+            isOneToOne: false
+            referencedRelation: "goal"
+            referencedColumns: ["goal_id"]
+          },
+          {
+            foreignKeyName: "data_point_learner_id_fk"
+            columns: ["learner_id"]
+            isOneToOne: false
+            referencedRelation: "learner"
+            referencedColumns: ["learner_id"]
+          },
+          {
+            foreignKeyName: "data_point_measurement_definition_id_fk"
+            columns: ["measurement_definition_id"]
+            isOneToOne: false
+            referencedRelation: "measurement_definition"
+            referencedColumns: ["measurement_definition_id"]
+          },
+          {
+            foreignKeyName: "data_point_observation_id_fk"
+            columns: ["observation_id"]
+            isOneToOne: false
+            referencedRelation: "observation"
+            referencedColumns: ["observation_id"]
+          },
+          {
+            foreignKeyName: "data_point_recorded_by_team_member_id_fk"
+            columns: ["recorded_by_team_member_id"]
+            isOneToOne: false
+            referencedRelation: "team_member"
+            referencedColumns: ["team_member_id"]
+          },
+        ]
+      }
       goal: {
         Row: {
           allowed_supports: string | null
@@ -336,6 +436,75 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      measurement_definition: {
+        Row: {
+          code: string
+          collection_cadence: string
+          created_at: string
+          denominator_label: string | null
+          goal_id: string
+          label_ar: string
+          measurement_definition_id: string
+          measurement_plan_id: string
+          measurement_type: Database["public"]["Enums"]["measurement_definition_type"]
+          numerator_label: string | null
+          status: Database["public"]["Enums"]["measurement_definition_status"]
+          support_tracking_required: boolean
+          target_criterion: string
+          unit: string
+          updated_at: string
+        }
+        Insert: {
+          code: string
+          collection_cadence: string
+          created_at?: string
+          denominator_label?: string | null
+          goal_id: string
+          label_ar: string
+          measurement_definition_id?: string
+          measurement_plan_id: string
+          measurement_type: Database["public"]["Enums"]["measurement_definition_type"]
+          numerator_label?: string | null
+          status?: Database["public"]["Enums"]["measurement_definition_status"]
+          support_tracking_required?: boolean
+          target_criterion: string
+          unit: string
+          updated_at?: string
+        }
+        Update: {
+          code?: string
+          collection_cadence?: string
+          created_at?: string
+          denominator_label?: string | null
+          goal_id?: string
+          label_ar?: string
+          measurement_definition_id?: string
+          measurement_plan_id?: string
+          measurement_type?: Database["public"]["Enums"]["measurement_definition_type"]
+          numerator_label?: string | null
+          status?: Database["public"]["Enums"]["measurement_definition_status"]
+          support_tracking_required?: boolean
+          target_criterion?: string
+          unit?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "measurement_definition_goal_id_fk"
+            columns: ["goal_id"]
+            isOneToOne: false
+            referencedRelation: "goal"
+            referencedColumns: ["goal_id"]
+          },
+          {
+            foreignKeyName: "measurement_definition_measurement_plan_id_fk"
+            columns: ["measurement_plan_id"]
+            isOneToOne: false
+            referencedRelation: "measurement_plan"
+            referencedColumns: ["measurement_plan_id"]
+          },
+        ]
       }
       measurement_plan: {
         Row: {
@@ -666,6 +835,7 @@ export type Database = {
     }
     Functions: {
       has_case_access: { Args: { _case_id: string }; Returns: boolean }
+      has_goal_case_access: { Args: { _goal_id: string }; Returns: boolean }
       is_own_team_member: {
         Args: { _team_member_id: string }
         Returns: boolean
@@ -712,6 +882,31 @@ export type Database = {
         | "therapy"
         | "vocational"
         | "combined"
+      data_point_outcome_code:
+        | "success"
+        | "partial"
+        | "unsuccessful"
+        | "not_applicable"
+      data_point_source_mode:
+        | "manual"
+        | "imported"
+        | "device_assisted"
+        | "AI_suggested"
+      data_point_unit:
+        | "percent"
+        | "count"
+        | "duration_seconds"
+        | "duration_minutes"
+        | "latency_seconds"
+        | "rate"
+        | "rubric_score"
+        | "prompt_level"
+        | "productivity_rate"
+      data_point_validation_status:
+        | "draft"
+        | "validated"
+        | "corrected"
+        | "rejected"
       goal_human_approval_status:
         | "pending"
         | "approved"
@@ -742,6 +937,18 @@ export type Database = {
         | "transition"
         | "therapy"
         | "self_determination"
+      measurement_definition_status: "draft" | "active"
+      measurement_definition_type:
+        | "accuracy"
+        | "frequency"
+        | "duration"
+        | "latency"
+        | "task_analysis"
+        | "prompt_level"
+        | "productivity"
+        | "quality"
+        | "self_correction"
+        | "generalization"
       need_priority_basis:
         | "assessment"
         | "learner_priority"
@@ -974,6 +1181,35 @@ export const Constants = {
         "vocational",
         "combined",
       ],
+      data_point_outcome_code: [
+        "success",
+        "partial",
+        "unsuccessful",
+        "not_applicable",
+      ],
+      data_point_source_mode: [
+        "manual",
+        "imported",
+        "device_assisted",
+        "AI_suggested",
+      ],
+      data_point_unit: [
+        "percent",
+        "count",
+        "duration_seconds",
+        "duration_minutes",
+        "latency_seconds",
+        "rate",
+        "rubric_score",
+        "prompt_level",
+        "productivity_rate",
+      ],
+      data_point_validation_status: [
+        "draft",
+        "validated",
+        "corrected",
+        "rejected",
+      ],
       goal_human_approval_status: [
         "pending",
         "approved",
@@ -1007,6 +1243,19 @@ export const Constants = {
         "transition",
         "therapy",
         "self_determination",
+      ],
+      measurement_definition_status: ["draft", "active"],
+      measurement_definition_type: [
+        "accuracy",
+        "frequency",
+        "duration",
+        "latency",
+        "task_analysis",
+        "prompt_level",
+        "productivity",
+        "quality",
+        "self_correction",
+        "generalization",
       ],
       need_priority_basis: [
         "assessment",
