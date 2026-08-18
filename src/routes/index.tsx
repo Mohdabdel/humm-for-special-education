@@ -8,6 +8,7 @@ import { TodaysSessionsSection } from "@/components/case-workspace/TodaysSession
 import { SessionCard } from "@/components/case-workspace/SessionCard";
 import { QuickCapturePanel } from "@/components/case-workspace/QuickCapturePanel";
 import { SessionCreationPanel } from "@/components/case-workspace/SessionCreationPanel";
+import { MeasurementDefinitionsSection } from "@/components/case-workspace/MeasurementDefinitionsSection";
 import { LogoutButton } from "@/components/LogoutButton";
 import type { Database } from "@/integrations/supabase/types";
 
