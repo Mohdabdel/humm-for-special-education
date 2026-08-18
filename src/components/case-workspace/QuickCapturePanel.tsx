@@ -158,6 +158,15 @@ export function QuickCapturePanel({ caseId, learnerId }: QuickCapturePanelProps)
   const [sessionId, setSessionId] = useState<string>("");
   const [goalId, setGoalId] = useState<string>("");
 
+  const [includeDataPoint, setIncludeDataPoint] = useState(false);
+  const [definitionId, setDefinitionId] = useState<string>("");
+  const [valueNumeric, setValueNumeric] = useState<string>("");
+  const [numerator, setNumerator] = useState<string>("");
+  const [denominator, setDenominator] = useState<string>("");
+  const [unit, setUnit] = useState<DataPointUnit>("percent");
+  const [outcomeCode, setOutcomeCode] = useState<DataPointOutcomeCode>("partial");
+  const [recordedAt, setRecordedAt] = useState<string>(() => toLocalInputValue(new Date()));
+
   const teamMemberQuery = useQuery({
     queryKey: ["current-team-member"],
     queryFn: loadCurrentTeamMemberId,
@@ -170,33 +179,83 @@ export function QuickCapturePanel({ caseId, learnerId }: QuickCapturePanelProps)
     queryKey: ["quick-capture-goals", caseId],
     queryFn: () => loadGoalOptions(caseId),
   });
+  const definitionsQuery = useQuery({
+    queryKey: ["quick-capture-active-definitions", goalId],
+    queryFn: () => loadActiveDefinitions(goalId),
+    enabled: goalId !== "",
+  });
 
   const teamMemberId = teamMemberQuery.data ?? null;
+  const activeDefinitions = goalId === "" ? [] : (definitionsQuery.data ?? []);
+  const selectedSession =
+    sessionId === ""
+      ? null
+      : ((sessionsQuery.data ?? []).find((s) => s.session_id === sessionId) ?? null);
 
   const createObservation = useMutation({
     mutationFn: async () => {
       if (!teamMemberId) throw new Error("no_team_member");
-      const { error } = await supabase.from("observation").insert({
-        case_id: caseId,
-        learner_id: learnerId,
-        observer_team_member_id: teamMemberId,
-        session_id: sessionId === "" ? null : sessionId,
-        goal_id: goalId === "" ? null : goalId,
-        observation_type: observationType,
-        purpose,
-        narrative_text: narrativeText.trim(),
-        status: "draft",
-        observed_at: new Date().toISOString(),
-      });
+      const { data: inserted, error } = await supabase
+        .from("observation")
+        .insert({
+          case_id: caseId,
+          learner_id: learnerId,
+          observer_team_member_id: teamMemberId,
+          session_id: sessionId === "" ? null : sessionId,
+          goal_id: goalId === "" ? null : goalId,
+          observation_type: observationType,
+          purpose,
+          narrative_text: narrativeText.trim(),
+          status: "draft",
+          observed_at: new Date().toISOString(),
+        })
+        .select("observation_id")
+        .single();
       if (error) throw error;
+
+      const shouldRecordDataPoint =
+        includeDataPoint && goalId !== "" && definitionId !== "" && activeDefinitions.length > 0;
+
+      if (shouldRecordDataPoint) {
+        const parsed = (raw: string): number | null => {
+          const trimmed = raw.trim();
+          if (trimmed === "") return null;
+          const n = Number(trimmed);
+          return Number.isFinite(n) ? n : null;
+        };
+        const { error: dpError } = await supabase.from("data_point").insert({
+          observation_id: inserted.observation_id,
+          case_id: caseId,
+          learner_id: learnerId,
+          goal_id: goalId,
+          measurement_definition_id: definitionId,
+          value_numeric: parsed(valueNumeric),
+          numerator: parsed(numerator),
+          denominator: parsed(denominator),
+          unit,
+          outcome_code: outcomeCode,
+          recorded_at: new Date(recordedAt).toISOString(),
+          source_mode: "manual",
+          validation_status: "draft",
+          recorded_by_team_member_id: teamMemberId,
+        });
+        if (dpError) throw dpError;
+      }
     },
     onSuccess: async () => {
       setNarrativeText("");
       setSessionId("");
       setGoalId("");
+      setIncludeDataPoint(false);
+      setDefinitionId("");
+      setValueNumeric("");
+      setNumerator("");
+      setDenominator("");
+      setRecordedAt(toLocalInputValue(new Date()));
       await queryClient.invalidateQueries({ queryKey: ["observations", caseId] });
     },
   });
+
 
   function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
