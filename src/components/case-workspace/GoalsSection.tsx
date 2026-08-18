@@ -251,6 +251,41 @@ export function GoalsSection({ caseId, learnerId }: GoalsSectionProps) {
                   {APPROVAL_LABEL_AR[g.human_approval_status]}
                 </span>
               </span>
+
+              {g.status === "draft" &&
+              canFinalize &&
+              teamMemberId !== null &&
+              g.owner_team_member_id === teamMemberId ? (
+                <button
+                  type="button"
+                  onClick={() => finalizeGoal.mutate(g.goal_id)}
+                  disabled={finalizeGoal.isPending}
+                  className="rounded-md border border-primary px-3 py-1 text-xs font-medium text-primary disabled:opacity-60"
+                >
+                  إرسال للمراجعة
+                </button>
+              ) : null}
+
+              {g.status === "in_review" && canReview ? (
+                <span className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => decideGoal.mutate({ goalId: g.goal_id, decision: "approve" })}
+                    disabled={decideGoal.isPending}
+                    className="rounded-md bg-primary px-3 py-1 text-xs font-medium text-primary-foreground disabled:opacity-60"
+                  >
+                    اعتماد
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => decideGoal.mutate({ goalId: g.goal_id, decision: "reject" })}
+                    disabled={decideGoal.isPending}
+                    className="rounded-md border border-destructive px-3 py-1 text-xs font-medium text-destructive disabled:opacity-60"
+                  >
+                    رفض
+                  </button>
+                </span>
+              ) : null}
             </li>
           ))}
         </ul>
