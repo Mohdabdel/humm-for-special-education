@@ -295,6 +295,8 @@ function CaseWorkspacePage() {
 
       <GoalsSection caseId={c.case_id} learnerId={c.learner_id} />
 
+      <MeasurementDefinitionsSection caseId={c.case_id} />
+
       <TodaysSessionsSection
         caseId={c.case_id}
         selectedSessionId={selectedSessionId}
