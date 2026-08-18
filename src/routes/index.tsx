@@ -1,10 +1,13 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { NeedsSection } from "@/components/case-workspace/NeedsSection";
 import { GoalsSection } from "@/components/case-workspace/GoalsSection";
 import { TodaysSessionsSection } from "@/components/case-workspace/TodaysSessionsSection";
+import { SessionCard } from "@/components/case-workspace/SessionCard";
 import type { Database } from "@/integrations/supabase/types";
+
 
 type CaseRow = Database["public"]["Tables"]["case"]["Row"];
 type CaseStatus = Database["public"]["Enums"]["case_status"];
@@ -113,11 +116,13 @@ function Shell({ children }: { children: React.ReactNode }) {
 function CaseWorkspacePage() {
   const search = Route.useSearch();
   const caseId = search.case_id;
+  const [selectedSessionId, setSelectedSessionId] = useState<string | null>(null);
 
   const { data, isPending, error } = useQuery({
     queryKey: ["case-workspace", caseId ?? "first"],
     queryFn: () => loadWorkspace(caseId),
   });
+
 
   if (isPending) {
     return (
@@ -278,9 +283,16 @@ function CaseWorkspacePage() {
 
       <GoalsSection caseId={c.case_id} learnerId={c.learner_id} />
 
-      <TodaysSessionsSection caseId={c.case_id} />
+      <TodaysSessionsSection
+        caseId={c.case_id}
+        selectedSessionId={selectedSessionId}
+        onSelectSession={setSelectedSessionId}
+      />
+
+      <SessionCard sessionId={selectedSessionId} caseId={c.case_id} />
 
       <Section title="الخط الزمني المختصر">
+
         <ol className="space-y-3 border-r border-border pr-4">
           {timeline.map((t) => (
             <li key={t.id} className="relative">
