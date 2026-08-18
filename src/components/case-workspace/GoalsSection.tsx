@@ -1,6 +1,8 @@
 import { useState, type FormEvent } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { MeasurementPlanPanel } from "@/components/case-workspace/MeasurementPlanPanel";
+
 import type { Database } from "@/integrations/supabase/types";
 
 type GoalRow = Database["public"]["Tables"]["goal"]["Row"];
