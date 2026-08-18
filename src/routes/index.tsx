@@ -111,7 +111,7 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 // TEMP DEBUG: remove after auth/RLS diagnosis
 const EXPECTED_DEBUG_USER_ID = "4c1d72d9-45a6-4255-9da1-c8109a35d6b7";
 
-function TempDebugSessionPanel() {
+function TempDebugSessionPanel({ queryError }: { queryError?: unknown }) {
   const [sessionInfo, setSessionInfo] = useState<
     | { kind: "loading" }
     | { kind: "ready"; active: boolean; userId: string | null; matches: boolean }
@@ -134,6 +134,21 @@ function TempDebugSessionPanel() {
     };
   }, []);
 
+  const errorMessage =
+    queryError != null && typeof queryError === "object" && "message" in queryError
+      ? String(queryError.message)
+      : null;
+  const errorCode =
+    queryError != null && typeof queryError === "object" && "code" in queryError
+      ? String(queryError.code)
+      : null;
+  const errorDetails =
+    queryError != null && typeof queryError === "object" && "details" in queryError
+      ? String(queryError.details)
+      : null;
+  const fullError =
+    queryError != null ? JSON.stringify(queryError, Object.getOwnPropertyNames(queryError), 2) : null;
+
   if (sessionInfo.kind === "loading") {
     return (
       <div className="rounded-md border-2 border-dashed border-destructive bg-destructive/10 p-4 text-sm text-destructive">
@@ -155,16 +170,36 @@ function TempDebugSessionPanel() {
           </li>
         )}
       </ul>
+
+      {/* TEMP DEBUG: raw error from the Case Workspace case-loading query */}
+      <div className="mt-4 border-t border-destructive/40 pt-3">
+        <p className="font-bold">TEMP DEBUG: خطأ استعلام الحالة</p>
+        {queryError ? (
+          <ul className="mt-2 space-y-1 break-all font-mono">
+            {errorMessage && <li>الرسالة: {errorMessage}</li>}
+            {errorCode && <li>الرمز: {errorCode}</li>}
+            {errorDetails && <li>التفاصيل: {errorDetails}</li>}
+            {fullError && (
+              <li className="mt-2 whitespace-pre-wrap rounded bg-destructive/5 p-2 text-xs">
+                كامل الخطأ:
+                {fullError}
+              </li>
+            )}
+          </ul>
+        ) : (
+          <p className="mt-2">لا يوجد خطأ مسجَّل في استعلام الحالة.</p>
+        )}
+      </div>
     </div>
   );
 }
 
-function Shell({ children }: { children: React.ReactNode }) {
+function Shell({ children, debugError }: { children: React.ReactNode; debugError?: unknown }) {
   return (
     <main dir="rtl" className="min-h-screen bg-background px-4 py-8 md:px-8">
       <div className="mx-auto max-w-5xl space-y-6">
         {/* TEMP DEBUG: remove after auth/RLS diagnosis */}
-        <TempDebugSessionPanel />
+        <TempDebugSessionPanel queryError={debugError} />
         {children}
       </div>
     </main>
