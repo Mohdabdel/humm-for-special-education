@@ -286,7 +286,12 @@ export function GoalsSection({ caseId, learnerId }: GoalsSectionProps) {
                   </button>
                 </span>
               ) : null}
+
+              {g.human_approval_status === "approved" ? (
+                <MeasurementPlanPanel goalId={g.goal_id} />
+              ) : null}
             </li>
+
           ))}
         </ul>
       )}
