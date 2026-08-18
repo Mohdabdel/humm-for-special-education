@@ -61,6 +61,21 @@ async function loadNeeds(caseId: string): Promise<NeedRow[]> {
   return data ?? [];
 }
 
+type MembershipRole = Database["public"]["Enums"]["case_membership_role"];
+
+const AUTHOR_ROLES: MembershipRole[] = ["special_educator", "therapist"];
+const REVIEWER_ROLES: MembershipRole[] = ["supervisor", "case_manager"];
+
+async function loadCaseRoles(caseId: string): Promise<MembershipRole[]> {
+  const { data, error } = await supabase
+    .from("case_membership")
+    .select("role")
+    .eq("case_id", caseId)
+    .is("ended_at", null);
+  if (error) throw error;
+  return (data ?? []).map((r) => r.role);
+}
+
 async function loadCurrentTeamMemberId(): Promise<string | null> {
   const { data: userData } = await supabase.auth.getUser();
   const userId = userData.user?.id;
@@ -102,9 +117,53 @@ export function GoalsSection({ caseId, learnerId }: GoalsSectionProps) {
     queryFn: loadCurrentTeamMemberId,
   });
 
+  const rolesQuery = useQuery({
+    queryKey: ["case-roles", caseId],
+    queryFn: () => loadCaseRoles(caseId),
+  });
+
   const needs = needsQuery.data ?? [];
   const goals = goalsQuery.data ?? [];
   const teamMemberId = teamMemberQuery.data ?? null;
+  const myRoles = rolesQuery.data ?? [];
+  const canFinalize = myRoles.some((r) => AUTHOR_ROLES.includes(r));
+  const canReview = myRoles.some((r) => REVIEWER_ROLES.includes(r));
+
+  const finalizeGoal = useMutation({
+    mutationFn: async (goalId: string) => {
+      const { error } = await supabase
+        .from("goal")
+        .update({ status: "in_review", updated_at: new Date().toISOString() })
+        .eq("goal_id", goalId)
+        .eq("status", "draft");
+      if (error) throw error;
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ["goals", caseId] });
+    },
+  });
+
+  const decideGoal = useMutation({
+    mutationFn: async ({ goalId, decision }: { goalId: string; decision: "approve" | "reject" }) => {
+      if (!teamMemberId) throw new Error("no_team_member");
+      const now = new Date().toISOString();
+      const { error } = await supabase
+        .from("goal")
+        .update({
+          human_approval_status: decision === "approve" ? "approved" : "rejected",
+          status: decision === "approve" ? "approved" : "draft",
+          approved_by_team_member_id: teamMemberId,
+          approved_at: now,
+          updated_at: now,
+        })
+        .eq("goal_id", goalId)
+        .eq("status", "in_review");
+      if (error) throw error;
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ["goals", caseId] });
+    },
+  });
 
   const createGoal = useMutation({
     mutationFn: async () => {
@@ -192,6 +251,41 @@ export function GoalsSection({ caseId, learnerId }: GoalsSectionProps) {
                   {APPROVAL_LABEL_AR[g.human_approval_status]}
                 </span>
               </span>
+
+              {g.status === "draft" &&
+              canFinalize &&
+              teamMemberId !== null &&
+              g.owner_team_member_id === teamMemberId ? (
+                <button
+                  type="button"
+                  onClick={() => finalizeGoal.mutate(g.goal_id)}
+                  disabled={finalizeGoal.isPending}
+                  className="rounded-md border border-primary px-3 py-1 text-xs font-medium text-primary disabled:opacity-60"
+                >
+                  إرسال للمراجعة
+                </button>
+              ) : null}
+
+              {g.status === "in_review" && canReview ? (
+                <span className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => decideGoal.mutate({ goalId: g.goal_id, decision: "approve" })}
+                    disabled={decideGoal.isPending}
+                    className="rounded-md bg-primary px-3 py-1 text-xs font-medium text-primary-foreground disabled:opacity-60"
+                  >
+                    اعتماد
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => decideGoal.mutate({ goalId: g.goal_id, decision: "reject" })}
+                    disabled={decideGoal.isPending}
+                    className="rounded-md border border-destructive px-3 py-1 text-xs font-medium text-destructive disabled:opacity-60"
+                  >
+                    رفض
+                  </button>
+                </span>
+              ) : null}
             </li>
           ))}
         </ul>
