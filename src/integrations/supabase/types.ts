@@ -410,6 +410,69 @@ export type Database = {
           },
         ]
       }
+      governance_audit_log: {
+        Row: {
+          action_code: string
+          actor_org_role: string | null
+          actor_user_id: string
+          case_id: string | null
+          created_at: string
+          entity_id: string
+          entity_type: string
+          id: string
+          organization_id: string
+          outcome: string
+          provenance: Json
+          record_version: number
+          rule_results: Json
+        }
+        Insert: {
+          action_code: string
+          actor_org_role?: string | null
+          actor_user_id: string
+          case_id?: string | null
+          created_at?: string
+          entity_id: string
+          entity_type: string
+          id?: string
+          organization_id: string
+          outcome: string
+          provenance?: Json
+          record_version: number
+          rule_results?: Json
+        }
+        Update: {
+          action_code?: string
+          actor_org_role?: string | null
+          actor_user_id?: string
+          case_id?: string | null
+          created_at?: string
+          entity_id?: string
+          entity_type?: string
+          id?: string
+          organization_id?: string
+          outcome?: string
+          provenance?: Json
+          record_version?: number
+          rule_results?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "governance_audit_log_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "case"
+            referencedColumns: ["case_id"]
+          },
+          {
+            foreignKeyName: "governance_audit_log_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       learner: {
         Row: {
           created_at: string
@@ -710,6 +773,105 @@ export type Database = {
           },
         ]
       }
+      organizations: {
+        Row: {
+          active: boolean
+          code: string
+          created_at: string
+          id: string
+          name: string
+        }
+        Insert: {
+          active?: boolean
+          code: string
+          created_at?: string
+          id?: string
+          name: string
+        }
+        Update: {
+          active?: boolean
+          code?: string
+          created_at?: string
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
+      quality_disclosures: {
+        Row: {
+          case_id: string
+          created_at: string
+          created_by: string
+          entity_id: string
+          entity_type: string
+          entity_version: number
+          follow_up_owner: string | null
+          gap_type: string
+          id: string
+          impact: string
+          organization_id: string
+          resolution_note: string | null
+          resolved_at: string | null
+          resolved_by: string | null
+          rule_code: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          case_id: string
+          created_at?: string
+          created_by: string
+          entity_id: string
+          entity_type: string
+          entity_version: number
+          follow_up_owner?: string | null
+          gap_type: string
+          id?: string
+          impact: string
+          organization_id: string
+          resolution_note?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          rule_code: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          case_id?: string
+          created_at?: string
+          created_by?: string
+          entity_id?: string
+          entity_type?: string
+          entity_version?: number
+          follow_up_owner?: string | null
+          gap_type?: string
+          id?: string
+          impact?: string
+          organization_id?: string
+          resolution_note?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          rule_code?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quality_disclosures_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "case"
+            referencedColumns: ["case_id"]
+          },
+          {
+            foreignKeyName: "quality_disclosures_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       session: {
         Row: {
           actual_end_at: string | null
@@ -834,6 +996,103 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      activate_measurement_definition_hardened: {
+        Args: { _measurement_definition_id: string }
+        Returns: string
+      }
+      add_case_membership_hardened: {
+        Args: {
+          _case_id: string
+          _role: Database["public"]["Enums"]["case_membership_role"]
+          _team_member_id: string
+        }
+        Returns: string
+      }
+      approve_goal_hardened: {
+        Args: { _decision: string; _goal_id: string }
+        Returns: string
+      }
+      can_access_case: { Args: { _case_id: string }; Returns: boolean }
+      can_access_learner: { Args: { _learner_id: string }; Returns: boolean }
+      can_manage_case: { Args: { _case_id: string }; Returns: boolean }
+      create_data_point_hardened: {
+        Args: {
+          _denominator?: number
+          _measurement_definition_id: string
+          _numerator?: number
+          _observation_id: string
+          _outcome_code: Database["public"]["Enums"]["data_point_outcome_code"]
+          _recorded_at?: string
+          _unit: Database["public"]["Enums"]["data_point_unit"]
+          _value_numeric?: number
+        }
+        Returns: string
+      }
+      create_measurement_definition_hardened: {
+        Args: {
+          _code: string
+          _collection_cadence: string
+          _denominator_label?: string
+          _goal_id: string
+          _label_ar: string
+          _measurement_plan_id: string
+          _measurement_type: Database["public"]["Enums"]["measurement_definition_type"]
+          _numerator_label?: string
+          _support_tracking_required?: boolean
+          _target_criterion: string
+          _unit: string
+        }
+        Returns: string
+      }
+      create_measurement_plan_hardened: {
+        Args: {
+          _goal_id: string
+          _measurement_type: string
+          _target_criterion: string
+        }
+        Returns: string
+      }
+      create_observation_hardened: {
+        Args: {
+          _case_id: string
+          _goal_id?: string
+          _learner_id: string
+          _narrative_text?: string
+          _observation_type: Database["public"]["Enums"]["observation_type"]
+          _observed_at?: string
+          _purpose: Database["public"]["Enums"]["observation_purpose"]
+          _session_id?: string
+        }
+        Returns: string
+      }
+      create_session_hardened: {
+        Args: {
+          _brief_note?: string
+          _case_id: string
+          _goal_id?: string
+          _learner_id: string
+          _scheduled_end_at?: string
+          _scheduled_start_at?: string
+          _session_type: Database["public"]["Enums"]["session_type"]
+        }
+        Returns: string
+      }
+      current_team_member_for_case: {
+        Args: { _case_id: string }
+        Returns: {
+          organization_id: string
+          role_on_case: string
+          team_member_id: string
+        }[]
+      }
+      end_case_membership_hardened: {
+        Args: { _membership_id: string }
+        Returns: string
+      }
+      finalize_goal_for_review_hardened: {
+        Args: { _goal_id: string }
+        Returns: string
+      }
       has_case_access: { Args: { _case_id: string }; Returns: boolean }
       has_goal_case_access: { Args: { _goal_id: string }; Returns: boolean }
       is_own_team_member: {
@@ -842,6 +1101,29 @@ export type Database = {
       }
       shares_active_case_with_current_user: {
         Args: { _team_member_id: string }
+        Returns: boolean
+      }
+      update_case_status_hardened: {
+        Args: {
+          _case_id: string
+          _current_priority_summary?: string
+          _primary_stage?: Database["public"]["Enums"]["case_primary_stage"]
+          _risk_level?: Database["public"]["Enums"]["case_risk_level"]
+          _status: Database["public"]["Enums"]["case_status"]
+        }
+        Returns: string
+      }
+      update_session_status_hardened: {
+        Args: {
+          _brief_note?: string
+          _completion_status?: Database["public"]["Enums"]["session_completion_status"]
+          _next_status: Database["public"]["Enums"]["session_status"]
+          _session_id: string
+        }
+        Returns: string
+      }
+      user_belongs_to_organization: {
+        Args: { _org_id: string }
         Returns: boolean
       }
     }
